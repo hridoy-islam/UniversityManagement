@@ -34,7 +34,7 @@
     --supperagent: 180 84% 30%;
     --supperagent-foreground: 0 0% 98%;
     --watney: 215 62.69% 26.27%;
-    --theme: 34.63 100% 55.49%;
+    --theme: 193 100% 48.5%;
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -115,4 +115,25 @@
 }
 .react-select__menu {
   z-index: 50;
+}
+
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(193 100% 48.5%);
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(193 100% 48.5%);
 }

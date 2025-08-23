@@ -1,9 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AgentDashboard, ApplicantDashboard } from './rolewise-dashboard/agent-dashboard';
-import { InvestorDashboard, StudentDashboard } from './rolewise-dashboard/investor-dashboard';
+import { AgentDashboard } from './rolewise-dashboard/agent-dashboard';
+import { InvestorDashboard } from './rolewise-dashboard/investor-dashboard';
 import { AdminDashboard } from './rolewise-dashboard/admin-dashboard';
+// import { StaffDashboard } from './rolewise-dashboard/staff-dashboard';
+// import { VerifierDashboard } from './rolewise-dashboard/verifier-dashboard';
+// import { SignatoryDashboard } from './rolewise-dashboard/signatory-dashboard';
+// import { TeacherDashboard } from './rolewise-dashboard/teacher-dashboard';
+// import { CollegeAdminDashboard } from './rolewise-dashboard/college-admin-dashboard';
+// import { CampusAdminDashboard } from './rolewise-dashboard/campus-admin-dashboard';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import VerifyPage from '../auth/verify';
@@ -12,16 +18,6 @@ export default function DashboardPage() {
   const { user } = useSelector((state: any) => state.auth);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  // useEffect(() => {
-  //   if (user && user.isValided) {
-   
-  //         navigate('/dashboard');
-       
-  //   }
-  // }, [user, navigate]);
-
-
 
   if (loading) {
     return (
@@ -65,13 +61,22 @@ export default function DashboardPage() {
   // }
 
   const renderDashboard = () => {
-    switch (user.role) {
-      case 'investor':
-        return <InvestorDashboard user={user} />;
-      case 'agent':
-        return <AgentDashboard user={user} />;
+    switch (user.role.toLowerCase()) {
+      
       case 'admin':
         return <AdminDashboard />;
+      // case 'staff':
+      //   return <StaffDashboard user={user} />;
+      // case 'verifier':
+      //   return <VerifierDashboard user={user} />;
+      // case 'signatory':
+      //   return <SignatoryDashboard user={user} />;
+      // case 'teacher':
+      //   return <TeacherDashboard user={user} />;
+      // case 'college admin':
+      //   return <CollegeAdminDashboard user={user} />;
+      // case 'campus admin':
+      //   return <CampusAdminDashboard user={user} />;
       default:
         return (
           <div className="flex flex-1 items-center justify-center">

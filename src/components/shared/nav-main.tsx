@@ -1,57 +1,121 @@
-
-import { IconCirclePlusFilled, IconMail, type Icon } from "@tabler/icons-react"
-
-import { Button } from '@/components/ui/button'
+import { Link, useLocation } from 'react-router-dom';
 import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
-} from '@/components/ui/sidebar'
+  SidebarMenuButton,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem
+} from '@/components/ui/sidebar';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger
+} from '@/components/ui/collapsible';
+import { type Icon } from '@tabler/icons-react';
+import { IconChevronRight, IconChevronDown } from '@tabler/icons-react';
+import { useState } from 'react';
 
-export function NavMain({
-  items,
-}: {
-  items: {
-    title: string
-    url: string
-    icon?: Icon
-  }[]
-}) {
+interface NavItem {
+  title: string;
+  url?: string;
+  icon?: Icon;
+  items?: NavItem[];
+}
+
+export function NavMain({ items }: { items: NavItem[] }) {
+  const location = useLocation();
+  const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
+
+  const toggleItem = (title: string) => {
+    setOpenItems((prev) => ({
+      ...prev,
+      [title]: !prev[title]
+    }));
+  };
+
+  const renderMenuItem = (item: NavItem, level = 0) => {
+    const hasChildren = item.items && item.items.length > 0;
+    const isOpen = openItems[item.title];
+    const isActive = item.url === location.pathname;
+
+    return (
+      <SidebarMenuItem key={item.title}>
+        {hasChildren ? (
+          <Collapsible
+            open={isOpen}
+            onOpenChange={() => toggleItem(item.title)}
+            className="hover:border-sidebar-border hover:bg-sidebar-accent w-full rounded-lg border border-transparent"
+          >
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton
+                className={`flex items-center justify-between gap-2 hover:bg-theme hover:text-white ${level > 0 ? 'pl-2' : ''}`}
+              >
+                <div className="flex items-center gap-2">
+                  {item.icon && <item.icon size={16} />}
+                  <span>{item.title}</span>
+                </div>
+                {isOpen ? (
+                  <IconChevronDown size={14} className="text-gray-600 " />
+                ) : (
+                  <IconChevronRight size={14} className="text-gray-600 " />
+                )}
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+
+            <CollapsibleContent className="mt-1.5 animate-in slide-in-from-left-3">
+              <SidebarMenuSub>
+                {item.items?.map((subItem) => (
+                  <SidebarMenuSubItem key={subItem.title}>
+                    {subItem.items && subItem.items.length > 0 ? (
+                      renderMenuItem(subItem, level + 1)
+                    ) : (
+                      <SidebarMenuSubItem key={subItem.title}>
+                        {subItem.items && subItem.items.length > 0 ? (
+                          renderMenuItem(subItem, level + 1)
+                        ) : (
+                          <SidebarMenuSubButton
+                            asChild
+                            className={`hover:bg-theme hover:text-white ${level > 0 ? 'pl-2' : ''}`}
+                          >
+                            <Link
+                              to={subItem.url || '#'}
+                              className="flex items-center gap-2"
+                            >
+                              {subItem.icon && <subItem.icon size={16} />}
+                              <span className="text-xs">{subItem.title}</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        )}
+                      </SidebarMenuSubItem>
+                    )}
+                  </SidebarMenuSubItem>
+                ))}
+              </SidebarMenuSub>
+            </CollapsibleContent>
+          </Collapsible>
+        ) : (
+          <SidebarMenuButton
+            asChild
+            className={`hover:bg-theme hover:text-white ${level > 0 ? 'pl-2' : ''} ${isActive ? 'bg-theme text-white' : ''}`}
+          >
+            <Link to={item.url || '#'} className="flex items-center gap-2">
+              {item.icon && <item.icon size={16} />}
+              <span>{item.title}</span>
+            </Link>
+          </SidebarMenuButton>
+        )}
+      </SidebarMenuItem>
+    );
+  };
+
   return (
     <SidebarGroup>
-      <SidebarGroupContent className="flex flex-col gap-2">
-        {/* <SidebarMenu>
-          <SidebarMenuItem className="flex items-center gap-2">
-            <SidebarMenuButton
-              tooltip="Quick Create"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear"
-            >
-              <IconCirclePlusFilled />
-              <span>Quick Create</span>
-            </SidebarMenuButton>
-            <Button
-              size="icon"
-              className="size-8 group-data-[collapsible=icon]:opacity-0"
-              variant="outline"
-            >
-              <IconMail />
-              <span className="sr-only">Inbox</span>
-            </Button>
-          </SidebarMenuItem>
-        </SidebarMenu> */}
-        <SidebarMenu>
-          {items.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton tooltip={item.title} className="hover:bg-theme hover:text-white">
-                {item.icon && <item.icon />}
-                <span>{item.title}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
+      <SidebarGroupContent>
+        <SidebarMenu>{items.map((item) => renderMenuItem(item))}</SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
-  )
+  );
 }

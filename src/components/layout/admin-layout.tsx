@@ -3,8 +3,6 @@ import { SideNav } from '@/components/shared/side-nav';
 import AutoLogout from '../shared/auto-logout';
 import { Toaster } from '@/components/ui/toaster';
 import { useSelector } from 'react-redux';
-import VerifyPage from '@/pages/auth/verify';
-import VerticalNav from '../shared/VericalNav';
 import { SidebarInset, SidebarProvider } from '../ui/sidebar';
 import { AppSidebar } from '../shared/app-sidebar';
 import { SiteHeader } from '../shared/site-header';
@@ -29,9 +27,11 @@ export default function AdminLayout({
       <div className="flex h-full w-full bg-gray-100">
         <AppSidebar />
 
-        <SidebarInset className="flex w-full  flex-col overflow-hidden bg-white md:mb-2 md:ml-52  md:mr-2 md:mt-2 md:rounded-lg md:shadow-md">
-          <SiteHeader />
-          <main className="w-full p-4">{children}</main>
+        <SidebarInset className="flex w-full  flex-col overflow-auto bg-white  md:ml-64 md:shadow-md">
+          <div className='md:hidden'>
+            <SiteHeader />
+            </div>
+          <main className="w-full p-4 md:p-6 ">{children}</main>
         </SidebarInset>
       </div>
 
