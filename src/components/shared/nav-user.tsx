@@ -1,32 +1,22 @@
-import {
-  IconCreditCard,
-  IconDotsVertical,
-  IconLogout,
-  IconNotification,
-  IconUserCircle
-} from '@tabler/icons-react';
-
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
+
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar
 } from '@/components/ui/sidebar';
-import { LogOut } from 'lucide-react';
+import { Power } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/redux/store';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '@/redux/features/authSlice';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from '@/components/ui/tooltip';
 
 export function NavUser({
   user
@@ -38,7 +28,7 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
- const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -67,15 +57,23 @@ export function NavUser({
               </span>
             </div>
             <div className="ml-auto flex items-center gap-2 p-1">
-              <div
-                onClick={handleLogout}
-                className="flex cursor-pointer items-center rounded-md p-2 hover:bg-theme/20"
-              >
-                <div className="flex flex-row items-center justify-center gap-1 ">
-                  <LogOut className="h-4 w-4" />
-                  {/* <span className="font-semibold">Log out</span> */}
-                </div>
-              </div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div
+                      onClick={handleLogout}
+                      className="flex cursor-pointer items-center rounded-md p-2 hover:bg-theme/20"
+                    >
+                      <div className="flex flex-row items-center justify-center gap-1">
+                        <Power className="h-4 w-4" />
+                      </div>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p className="text-xs">Logout</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </SidebarMenuButton>
         </div>

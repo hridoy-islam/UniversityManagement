@@ -15,9 +15,7 @@ import { useRouter } from '@/routes/hooks';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
-import taskplan from '@/assets/imges/home/forget.png';
-import logo from '@/assets/imges/home/logo.png';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 
 const formSchema = z.object({
@@ -29,11 +27,13 @@ type UserFormValue = z.infer<typeof formSchema>;
 export default function ForgotPassword() {
   const { loading, error } = useSelector((state: any) => state.auth);
   const router = useRouter();
+  const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
+
   const defaultValues = {
-    email: '',
-    password: ''
+    email: ''
   };
+
   const form = useForm<UserFormValue>({
     resolver: zodResolver(formSchema),
     defaultValues
@@ -43,77 +43,120 @@ export default function ForgotPassword() {
     const result: any = await dispatch(requestOtp(data));
     if (result?.payload?.success) {
       localStorage.setItem('tp_otp_email', data.email);
-
       router.push('/otp');
     }
   };
 
   return (
     <div
-      className="relative grid h-screen w-full bg-gray-100 lg:px-0"
+      className="relative flex h-screen w-full items-center justify-between bg-cover bg-center"
       style={{
         backgroundImage: "url('/login.jpg')",
         backgroundSize: 'cover',
         backgroundPosition: 'center'
       }}
     >
-      {/* Blur Overlay */}
-      <div className="absolute inset-0 z-0 bg-black/10 backdrop-blur-none" />
+      {/* Overlay for better contrast */}
+      <div className="absolute inset-0 z-0 bg-black/50" />
 
-      {/* Content (Left Aligned) */}
-      <div className="relative z-10 flex h-full w-full items-center justify-start p-4 lg:p-8">
-        <div className="flex w-full max-w-xl flex-col justify-center space-y-4 sm:p-8">
-          <Card className="flex w-full flex-col justify-center space-y-4 rounded-xl border border-gray-200 bg-white p-4 backdrop-blur-md">
-            <div className="mb-2 flex flex-col space-y-2 text-left">
-              <div className="flex flex-row items-center gap-4">
-                <h1 className="text-2xl font-semibold tracking-tight">
-                  Forget Password
-                </h1>
-              </div>
-              <p className="text-sm text-muted">
-                Enter your registered email and <br /> we will send you a link
-                to reset your password.
-              </p>
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="w-full space-y-4"
-                >
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="email"
-                            placeholder="Enter your email..."
-                            disabled={loading}
-                            {...field}
-                            className="w-full border-gray-400"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <Button
-                    disabled={loading}
-                    className="ml-auto w-full bg-theme text-white hover:bg-theme"
-                    type="submit"
-                  >
-                    Reset Password
-                  </Button>
-                </form>
-              </Form>
-            </div>
-          </Card>
+      {/* Left Side Content */}
+      <div className="relative z-10 ml-16 flex w-full  flex-col items-start justify-center p-6 lg:p-12">
+        <div className="mb-4 flex items-center gap-2">
+          <span className="text-4xl font-bold text-white">
+            University Management
+          </span>
         </div>
+
+        <div className="text-left text-white">
+          <p className="mb-1 text-lg font-medium">
+            RESET YOUR PASSWORD
+          </p>
+          <h1 className="mb-4 text-3xl font-extrabold md:text-4xl">
+            Secure & Easy Access
+          </h1>
+          <p className="mb-6 max-w-xs text-sm text-gray-100">
+            Enter your email to receive a reset otp.
+           
+          </p>
+        </div>
+
+        {/* Navigation Tabs */}
+        {/* <div className="flex overflow-hidden rounded-lg border border-gray-300 shadow-sm">
+          <Link
+            to="/login"
+            className="flex-1 bg-transparent px-6 py-3 text-center font-medium text-white transition-colors duration-200 hover:bg-white/20"
+          >
+            Login
+          </Link>
+          <Link
+            to="/signup"
+            className="flex-1 bg-white px-6 py-3 text-center font-medium text-gray-700 transition-colors duration-200 hover:bg-gray-50"
+          >
+            Register
+          </Link>
+        </div> */}
+      </div>
+
+      {/* Right Side - Forgot Password Form */}
+      <div className="relative z-10 flex h-full w-full items-center justify-end p-6 lg:p-12">
+        <Card className="w-full max-w-md rounded-xl border-none bg-white/95 p-8 shadow-xl backdrop-blur-sm">
+          <div className="mb-6 text-center">
+            <h2 className="text-2xl font-semibold text-gray-800">
+              Forgot Password?
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              No worries! Enter your email to reset your password.
+            </p>
+          </div>
+
+          {/* Form */}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="Enter your email..."
+                        disabled={loading}
+                        {...field}
+                        className="w-full border-gray-300 focus:border-theme focus:ring-theme"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button
+                disabled={loading}
+                className="w-full bg-theme text-white hover:bg-theme/90"
+                type="submit"
+              >
+                {loading ? 'Sending...' : 'Reset Password'}
+              </Button>
+            </form>
+          </Form>
+
+          {error && (
+            <p className="mt-4 text-center text-sm text-red-500">{error}</p>
+          )}
+
+          {/* Back to Login */}
+          <div className="mt-6 text-center">
+            <Link
+              to="/"
+              className="text-sm text-gray-600 hover:text-theme hover:underline"
+            >
+              ← Back to login
+            </Link>
+          </div>
+        </Card>
       </div>
     </div>
   );
-  
-  
 }

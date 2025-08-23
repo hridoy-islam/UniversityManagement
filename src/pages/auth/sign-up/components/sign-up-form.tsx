@@ -30,6 +30,7 @@ import {
 
 import type { HTMLAttributes } from 'react';
 import { nationalities } from '@/types';
+import { motion } from 'framer-motion';
 
 interface SignUpFormProps extends HTMLAttributes<HTMLDivElement> {}
 
@@ -104,7 +105,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
     <section>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2 ">
-          <div className="grid grid-cols-1 gap-4 ">
+          <div className="grid grid-cols-1 gap-2 ">
             {/* Full Name */}
             <FormField
               control={form.control}
@@ -229,12 +230,31 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
 
           {/* Submit Button */}
           <div className="pt-4">
-            <Button
-              type="submit"
-              className="h-12 w-full rounded-md bg-theme font-medium text-white shadow-sm transition-colors hover:bg-theme/90"
+           
+
+             <motion.button
+            type="submit"
+            // disabled={loading}
+            className="relative flex h-12 w-full cursor-pointer items-center justify-center overflow-hidden rounded-md bg-theme text-lg font-semibold text-white"
+            initial="rest"
+            whileHover="hover"
+            animate="rest"
+          >
+            {/* Left Side - "GO!" */}
+            <motion.div
+              className="absolute bottom-0 left-0 top-0 flex w-16 items-center justify-center bg-gray-800 text-sm font-bold text-white"
+              variants={{
+                rest: { x: -100, opacity: 0 }, // hidden initially
+                hover: { x: 0, opacity: 1 } // slide in on hover
+              }}
+              transition={{ duration: 0.3 }}
             >
-              Create Account
-            </Button>
+              GO!
+            </motion.div>
+
+            {/* Right Side - "Login to your Account!" */}
+            <div className="flex-1 text-center text-white">Create Account</div>
+          </motion.button>
           </div>
         </form>
       </Form>

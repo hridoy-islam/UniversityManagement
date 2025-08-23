@@ -45,6 +45,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { BookOpen, Building, CalendarFold } from "lucide-react";
 
 // Define the navigation structure
 const data = {
@@ -54,163 +55,178 @@ const data = {
     avatar: "/avatars/shadcn.jpg",
   },
 
-  navMain: [
-    // === Dashboard ===
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: IconDashboard,
-    },
+navMain: [
+  // === Dashboard ===
+  {
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: IconDashboard,
+  },
+{
+    title: "Intake",
+    url: "intake",
+    icon: CalendarFold ,
+  },
+  {
+    title: "Course",
+    url: "course",
+    icon: BookOpen ,
+  },
+  {
+    title: "University",
+    url: "university",
+    icon: Building ,
+  },
+  // === Admission ===
+  {
+    title: "Admission",
+    icon: IconUserPlus,
+    items: [
+      { title: "Applications", url: "#" },
+      { title: "New Registrations", url: "#" },
+      { title: "Student List", url: "#" },
+      {
+        title: "Transfers",
+        items: [
+          { title: "Transfer Out", url: "#" },
+          { title: "Transfer In", url: "#" },
+        ],
+      },
+      { title: "Status Types", url: "#" },
+      { title: "ID Cards", url: "#" },
+      {
+        title: "Settings",
+        items: [
+          { title: "ID Card Settings", url: "#" },
+        ],
+      },
+    ],
+  },
 
-    // === Admission ===
-    {
-      title: "Admission",
-      icon: IconUserPlus,
-      items: [
-        { title: "Applications", url: "/admission/applications" },
-        { title: "New Registrations", url: "/admission/registrations" },
-        { title: "Student List", url: "/admission/students" },
-        {
-          title: "Transfers",
-          items: [
-            { title: "Transfer Out", url: "/admission/transfers/out" },
-            { title: "Transfer In", url: "/admission/transfers/in" },
-          ],
-        },
-        { title: "Status Types", url: "/admission/status-types" },
-        { title: "ID Cards", url: "/admission/id-cards" },
-        {
-          title: "Settings",
-          items: [
-            { title: "ID Card Settings", url: "/admission/settings/id-card" },
-          ],
-        },
-      ],
-    },
+  // === Students ===
+  {
+    title: "Students",
+    icon: IconUsers,
+    items: [
+      {
+        title: "Attendances",
+        items: [
+          {
+            title: "Subject Attendances",
+            url: "#",
+          },
+          {
+            title: "Attendance Report",
+            url: "#",
+          },
+        ],
+      },
+      { title: "Manage Leave", url: "#" },
+      { title: "Student Notes", url: "#" },
+      {
+        title: "Enrollments",
+        items: [
+          { title: "Single Enroll", url: "#" },
+          { title: "Group Enroll", url: "#" },
+          { title: "Course Add Drop", url: "#" },
+          { title: "Course Graduation", url: "#" },
+        ],
+      },
+      { title: "Alumni List", url: "#" },
+    ],
+  },
 
-    // === Students ===
-    {
-      title: "Students",
-      icon: IconUsers,
-      items: [
-        {
-          title: "Attendances",
-          items: [
-            {
-              title: "Subject Attendances",
-              url: "/students/attendance/subject",
-            },
-            {
-              title: "Attendance Report",
-              url: "/students/attendance/report",
-            },
-          ],
-        },
-        { title: "Manage Leave", url: "/students/leave" },
-        { title: "Student Notes", url: "/students/notes" },
-        {
-          title: "Enrollments",
-          items: [
-            { title: "Single Enroll", url: "/students/enroll/single" },
-            { title: "Group Enroll", url: "/students/enroll/group" },
-            { title: "Course Add Drop", url: "/students/enroll/add-drop" },
-            { title: "Course Graduation", url: "/students/enroll/graduation" },
-          ],
-        },
-        { title: "Alumni List", url: "/students/alumni" },
-      ],
-    },
 
-    // === Academic ===
-    {
-      title: "Academic",
-      icon: IconSchool,
-      items: [
-        { title: "Faculties", url: "/academic/faculties" },
-        { title: "Programs", url: "/academic/programs" },
-        { title: "Batches", url: "/academic/batches" },
-        { title: "Sessions", url: "/academic/sessions" },
-        { title: "Semesters", url: "/academic/semesters" },
-        { title: "Sections", url: "/academic/sections" },
-        { title: "Class Rooms", url: "/academic/classrooms" },
-        { title: "Courses", url: "/academic/courses" },
-        { title: "Enroll Course", url: "/academic/enroll-course" },
-      ],
-    },
+  
+  // === Academic ===
+  {
+    title: "Academic",
+    icon: IconSchool,
+    items: [
+      { title: "Faculties", url: "#" },
+      { title: "Programs", url: "#" },
+      { title: "Batches", url: "#" },
+      { title: "Sessions", url: "#" },
+      { title: "Semesters", url: "#" },
+      { title: "Sections", url: "#" },
+      { title: "Class Rooms", url: "#" },
+      { title: "Courses", url: "#" },
+      { title: "Enroll Course", url: "#" },
+    ],
+  },
 
-    // === Routine ===
-    {
-      title: "Routine",
-      icon: IconCalendarTime,
-      items: [
-        { title: "Manage Classes", url: "/routine/manage-classes" },
-        { title: "Class Schedules", url: "/routine/class-schedules" },
-        { title: "Manage Exams", url: "/routine/manage-exams" },
-        { title: "Teacher Routines", url: "/routine/teacher" },
-        {
-          title: "Settings",
-          items: [
-            { title: "Class Schedule", url: "/routine/settings/class-schedule" },
-            { title: "Exam Schedule", url: "/routine/settings/exam-schedule" },
-          ],
-        },
-      ],
-    },
+  // === Routine ===
+  {
+    title: "Routine",
+    icon: IconCalendarTime,
+    items: [
+      { title: "Manage Classes", url: "#" },
+      { title: "Class Schedules", url: "#" },
+      { title: "Manage Exams", url: "#" },
+      { title: "Teacher Routines", url: "#" },
+      {
+        title: "Settings",
+        items: [
+          { title: "Class Schedule", url: "#" },
+          { title: "Exam Schedule", url: "#" },
+        ],
+      },
+    ],
+  },
 
-    // === Examinations ===
-    {
-      title: "Examinations",
-      icon: IconClipboardList,
-      items: [
-        { title: "Exam Attendance", url: "/exams/attendance" },
-        { title: "Exam Mark Ledger", url: "/exams/mark-ledger" },
-        { title: "Exam Result", url: "/exams/result" },
-        { title: "Course Mark Ledger", url: "/exams/course-mark-ledger" },
-        { title: "Course Result", url: "/exams/course-result" },
-        { title: "Grading Systems", url: "/exams/grading" },
-        { title: "Exam Types", url: "/exams/types" },
-        { title: "Admit Cards", url: "/exams/admit-cards" },
-        {
-          title: "Settings",
-          items: [
-            { title: "Admit Settings", url: "/exams/settings/admit" },
-            {
-              title: "Mark Distribution",
-              url: "/exams/settings/mark-distribution",
-            },
-          ],
-        },
-      ],
-    },
+  // === Examinations ===
+  {
+    title: "Examinations",
+    icon: IconClipboardList,
+    items: [
+      { title: "Exam Attendance", url: "#" },
+      { title: "Exam Mark Ledger", url: "#" },
+      { title: "Exam Result", url: "#" },
+      { title: "Course Mark Ledger", url: "#" },
+      { title: "Course Result", url: "#" },
+      { title: "Grading Systems", url: "#" },
+      { title: "Exam Types", url: "#" },
+      { title: "Admit Cards", url: "#" },
+      {
+        title: "Settings",
+        items: [
+          { title: "Admit Settings", url: "#" },
+          {
+            title: "Mark Distribution",
+            url: "#",
+          },
+        ],
+      },
+    ],
+  },
 
-    // === Study Material ===
-    {
-      title: "Study Material",
-      icon: IconBook,
-      items: [
-        { title: "Assignment", url: "/study/assignment" },
-        { title: "Content List", url: "/study/content-list" },
-        { title: "Content Types", url: "/study/content-types" },
-      ],
-    },
+  // === Study Material ===
+  {
+    title: "Study Material",
+    icon: IconBook,
+    items: [
+      { title: "Assignment", url: "#" },
+      { title: "Content List", url: "#" },
+      { title: "Content Types", url: "#" },
+    ],
+  },
 
-    { title: "Fees Collection", url: "/fees", icon: IconCoin },
-    { title: "Human Resources", url: "/hr", icon: IconUsersGroup },
-    { title: "Staff Attendances", url: "/staff-attendance", icon: IconListCheck },
-    { title: "Leave Manager", url: "/leave", icon: IconWriting },
-    { title: "Accounts", url: "/accounts", icon: IconBuildingBank },
-    { title: "Communicates", url: "/communicates", icon: IconMessage },
-    { title: "Library", url: "/library", icon: IconBook2 },
-    { title: "Inventory", url: "/inventory", icon: IconFolder },
-    { title: "Hostel", url: "/hostel", icon: IconHome },
-    { title: "Transports", url: "/transport", icon: IconTruck },
-    { title: "Front Desk", url: "/front-desk", icon: IconDeviceDesktop },
-    { title: "Transcripts", url: "/transcripts", icon: IconFileCertificate },
-    { title: "Reports", url: "/reports", icon: IconReport },
-    { title: "Settings", url: "/settings", icon: IconSettings },
-    { title: "My Profile", url: "/profile", icon: IconUser },
-  ],
-
+  { title: "Fees Collection", url: "#", icon: IconCoin },
+  { title: "Human Resources", url: "#", icon: IconUsersGroup },
+  { title: "Staff Attendances", url: "#", icon: IconListCheck },
+  { title: "Leave Manager", url: "#", icon: IconWriting },
+  { title: "Accounts", url: "#", icon: IconBuildingBank },
+  { title: "Communicates", url: "#", icon: IconMessage },
+  { title: "Library", url: "#", icon: IconBook2 },
+  { title: "Inventory", url: "#", icon: IconFolder },
+  { title: "Hostel", url: "#", icon: IconHome },
+  { title: "Transports", url: "#", icon: IconTruck },
+  { title: "Front Desk", url: "#", icon: IconDeviceDesktop },
+  { title: "Transcripts", url: "#", icon: IconFileCertificate },
+  { title: "Reports", url: "#", icon: IconReport },
+  { title: "Settings", url: "#", icon: IconSettings },
+  { title: "My Profile", url: "#", icon: IconUser },
+],
   navSecondary: [
     { title: "Help", url: "#", icon: IconHelp },
     { title: "Search", url: "#", icon: IconSearch },

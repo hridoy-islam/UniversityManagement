@@ -27,6 +27,7 @@ import {
   useSignInWithGoogle
 } from 'react-firebase-hooks/auth';
 import { firebaseAuth } from '@/firebaseConfig';
+import { motion } from 'framer-motion';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Enter a valid email address' }),
@@ -129,7 +130,7 @@ export default function UserAuthForm() {
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem className=''>
+              <FormItem className="">
                 <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input
@@ -137,7 +138,7 @@ export default function UserAuthForm() {
                     placeholder="Enter your email..."
                     disabled={loading}
                     {...field}
-                    className='w-full h-12'
+                    className="h-12 w-full"
                   />
                 </FormControl>
                 <FormMessage />
@@ -157,7 +158,7 @@ export default function UserAuthForm() {
                     placeholder="Enter your password..."
                     disabled={loading}
                     {...field}
-                    className='w-full h-12'
+                    className="h-12 w-full"
                   />
                 </FormControl>
                 <FormMessage />
@@ -165,56 +166,38 @@ export default function UserAuthForm() {
             )}
           />
 
-          <Button
-            disabled={loading}
-            className="ml-auto h-12 text-lg font-semibold  w-full bg-theme text-white hover:bg-theme/90"
+          <motion.button
             type="submit"
+            disabled={loading}
+            className="relative flex h-12 w-full cursor-pointer items-center justify-center overflow-hidden rounded-md bg-theme text-lg font-semibold text-white"
+            initial="rest"
+            whileHover="hover"
+            animate="rest"
           >
-            Login
-          </Button>
+            {/* Left Side - "GO!" */}
+            <motion.div
+              className="absolute bottom-0 left-0 top-0 flex w-16 items-center justify-center bg-gray-800 text-sm font-bold text-white"
+              variants={{
+                rest: { x: -100, opacity: 0 }, // hidden initially
+                hover: { x: 0, opacity: 1 } // slide in on hover
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              GO!
+            </motion.div>
+
+            {/* Right Side - "Login to your Account!" */}
+            <div className="flex-1 text-center text-white">Login</div>
+          </motion.button>
         </form>
       </Form>
       {error && <Badge className="mt-2 bg-white text-red-500">{error}</Badge>}
       {/* <p className="text-sm">
         Don't have account? <span className='hover:underline'> <Link to="/signup">Signup</Link></span>{' '}
       </p> */}
-      <p className="text-sm text-right hover:underline">
+      <p className="mt-4 text-right text-sm hover:underline">
         <Link to="/forgot-password">Forgot Password?</Link>
       </p>
-
-      {/* <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            Or continue with
-          </span>
-        </div>
-      </div> */}
-      {/* <Button
-        onClick={handleGoogleLogin}
-        className="border-1 mt-6 flex h-12 items-center justify-center gap-2 border border-gray-400"
-      >
-        <img
-          src={`https://www.material-tailwind.com/logos/logo-google.png`}
-          alt="google"
-          className="h-6 w-6"
-        />{' '}
-        sign in with google
-      </Button>
-
-      <Button
-        onClick={handleFacebookLogin}
-        className="border-1 mt-6 flex h-12 items-center justify-center gap-2 border border-gray-400"
-      >
-        <img
-          src={`https://www.material-tailwind.com/logos/logo-facebook.png`}
-          alt="google"
-          className="h-6 w-6"
-        />{' '}
-        sign in with facebook
-      </Button> */}
     </>
   );
 }

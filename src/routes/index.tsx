@@ -8,6 +8,15 @@ import { Navigate, Outlet, useRoutes } from 'react-router-dom';
 import Otp from '@/pages/auth/otp';
 import NewPassword from '@/pages/auth/new-password';
 import AdminLayout from '@/components/layout/admin-layout';
+import IntakePage from '@/pages/intake';
+import EditIntakePage from '@/pages/intake/edit-intake';
+import AddIntakePage from '@/pages/intake/add-intake';
+import CoursePage from '@/pages/course';
+import AddCoursePage from '@/pages/course/add-course';
+import EditCoursePage from '@/pages/course/edit-course';
+import UniversityPage from '@/pages/university';
+import AddUniversityPage from '@/pages/university/add-university';
+import EditUniversityPage from '@/pages/university/edit-university';
 
 
 const SignInPage = lazy(() => import('@/pages/auth/signin'));
@@ -36,6 +45,42 @@ export default function AppRouter() {
         {
           path: 'profile',
           element: <ProfilePage />
+        },
+        {
+          path: 'intake',
+          element: <IntakePage />
+        },
+        {
+          path: 'intake/edit-intake/:id',
+          element: <EditIntakePage />
+        },
+        {
+          path: 'intake/add',
+          element: <AddIntakePage />
+        },
+        {
+          path: 'course',
+          element: <CoursePage />
+        },
+        {
+          path: 'course/add-course',
+          element: <AddCoursePage />
+        },
+        {
+          path: 'course/edit-course/:id',
+          element: <EditCoursePage />
+        },
+        {
+          path: 'university',
+          element: <UniversityPage />
+        },
+        {
+          path: 'university/add',
+          element: <AddUniversityPage />
+        },
+        {
+          path: 'university/edit/:id',
+          element: <EditUniversityPage />
         },
         
       ]
