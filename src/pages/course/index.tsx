@@ -105,7 +105,6 @@ export default function CoursePage() {
             <TableHeader>
               <TableRow>
                 <TableHead className="text-xs">Course Name</TableHead>
-                <TableHead className="text-xs">Description</TableHead>
                 <TableHead className="text-xs">Campus</TableHead>
                 <TableHead className="text-xs">Sector</TableHead>
                 <TableHead className="text-xs">Owner</TableHead>
@@ -118,7 +117,6 @@ export default function CoursePage() {
               {courses.map((course) => (
                 <TableRow key={course.id}>
                   <TableCell className="font-medium text-xs">{course.name}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{course.description}</TableCell>
                   <TableCell className="text-xs">{course.campus}</TableCell>
                   <TableCell className="text-xs">{course.sector}</TableCell>
                   <TableCell className="text-xs">{course.owner}</TableCell>

@@ -302,62 +302,10 @@ export default function EditCoursePage() {
               />
             </div>
 
-            {/* Course Description */}
-            <div className="space-y-1 pb-8">
-              <Label htmlFor="courseDescription" className="text-xs font-medium">
-                Course Description
-              </Label>
-              <ReactQuill
-                value={formData.courseDescription}
-                onChange={(value) =>
-                  setFormData((prev) => ({ ...prev, courseDescription: value }))
-                }
-                placeholder="Describe the course curriculum, duration, and goals..."
-                className="h-32 text-sm bg-white"
-                theme="snow"
-              />
-            </div>
-
-            {/* Learning Outcomes */}
-            <div className="space-y-1 pb-8">
-              <Label htmlFor="learningOutcomes" className="text-xs font-medium">
-                Learning Outcomes
-              </Label>
-              <ReactQuill
-                value={formData.learningOutcomes}
-                onChange={(value) =>
-                  setFormData((prev) => ({ ...prev, learningOutcomes: value }))
-                }
-                placeholder="List what students will learn..."
-                className="h-32 text-sm bg-white"
-                theme="snow"
-              />
-            </div>
 
             {/* Image, PDF, Video */}
             <div className="flex flex-row items-center gap-4 justify-between flex-wrap">
-              {/* Cover Image */}
-              <div className="space-y-1 w-full sm:w-auto">
-                <Label htmlFor="coverImage" className="text-xs font-medium">
-                  Cover Image
-                </Label>
-                <Input
-                  id="coverImage"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleFileChange(e, 'image')}
-                  className="h-8"
-                />
-                {/* {imagePreview && (
-                  <div className="mt-2">
-                    <img
-                      src={imagePreview}
-                      alt="Cover preview"
-                      className="h-20 w-auto rounded border object-cover"
-                    />
-                  </div>
-                )} */}
-              </div>
+           
 
               {/* Cover PDF */}
               <div className="space-y-1 w-full sm:w-auto">
@@ -385,22 +333,7 @@ export default function EditCoursePage() {
                 )} */}
               </div>
 
-              {/* Cover Video URL */}
-              <div className="space-y-1 w-full sm:w-auto flex-1">
-                <Label htmlFor="coverVideoUrl" className="text-xs font-medium">
-                  Cover Video URL
-                </Label>
-                <Input
-                  id="coverVideoUrl"
-                  type="url"
-                  placeholder="https://youtube.com/watch..."
-                  value={formData.coverVideoUrl}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, coverVideoUrl: e.target.value }))
-                  }
-                  className="h-8"
-                />
-              </div>
+             
             </div>
 
             {/* Submit Button */}

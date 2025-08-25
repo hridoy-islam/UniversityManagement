@@ -23,6 +23,13 @@ import EditStaffPage from '@/pages/staff/edit-staff';
 import AgentPage from '@/pages/agent';
 import AddAgentPage from '@/pages/agent/add-agent';
 import EditAgentPage from '@/pages/agent/edit-agent';
+import CampusPage from '@/pages/campus';
+import AddCampusPage from '@/pages/campus/add-campus';
+import EditCampusPage from '@/pages/campus/edit-campus';
+import StudentPage from '@/pages/student';
+import StudentViewPage from '@/pages/student/log-manager';
+import ApplicantPage from '@/pages/applicant';
+import ApplicantDetailsPage from '@/pages/applicant/applicant-details';
 
 
 const SignInPage = lazy(() => import('@/pages/auth/signin'));
@@ -112,7 +119,35 @@ export default function AppRouter() {
           path: 'agent/edit-agent/:id',
           element: <EditAgentPage />
         },
+        {
+          path: 'campus',
+          element: <CampusPage />
+        },
+        {
+          path: 'campus/add',
+          element: <AddCampusPage />
+        },
+        {
+          path: 'campus/edit-campus/:id',
+          element: <EditCampusPage />
+        },
+        {
+          path: 'student',
+          element: <StudentPage />
+        },
+        {
+          path: 'student/log-manager',
+          element: <StudentViewPage />
+        },
         
+        {
+          path: 'applicant',
+          element: <ApplicantPage />
+        },
+        {
+          path: 'applicant/applicant-details',
+          element: <ApplicantDetailsPage />
+        },
       ]
     }
   ];

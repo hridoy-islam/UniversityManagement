@@ -1,7 +1,13 @@
 import React from 'react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft } from 'lucide-react';
@@ -41,7 +47,7 @@ const universityData = {
   'university-of-birmingham': {
     name: 'University of Birmingham',
     campuses: {
-      'edgbaston': {
+      edgbaston: {
         name: 'Edgbaston Campus',
         location: 'Birmingham, UK'
       },
@@ -83,7 +89,9 @@ export default function AddCoursePage() {
     : [];
 
   // Handlers
-  const handleUniversityChange = (selected: { value: string; label: string } | null) => {
+  const handleUniversityChange = (
+    selected: { value: string; label: string } | null
+  ) => {
     setFormData((prev) => ({
       ...prev,
       university: selected?.value || '',
@@ -93,14 +101,19 @@ export default function AddCoursePage() {
     setPdfPreview(null);
   };
 
-  const handleCampusChange = (selected: { value: string; label: string } | null) => {
+  const handleCampusChange = (
+    selected: { value: string; label: string } | null
+  ) => {
     setFormData((prev) => ({
       ...prev,
       campus: selected?.value || ''
     }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'pdf') => {
+  const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: 'image' | 'pdf'
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -176,8 +189,10 @@ export default function AddCoursePage() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <CardTitle className="text-2xl font-bold">Add New Course</CardTitle>
-              <CardDescription className="text-xs mt-1">
+              <CardTitle className="text-2xl font-bold">
+                Add New Course
+              </CardTitle>
+              <CardDescription className="mt-1 text-xs">
                 Fill in the details to create a new course
               </CardDescription>
             </div>
@@ -187,11 +202,11 @@ export default function AddCoursePage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6 text-xs">
             {/* University & Campus (Grid) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {/* University */}
               <div className="space-y-1">
                 <Label htmlFor="university" className="text-xs font-medium">
-                  University
+                  University/Awarding Boady
                 </Label>
                 <Select
                   id="university"
@@ -215,7 +230,11 @@ export default function AddCoursePage() {
                   id="campus"
                   options={campusOptions}
                   onChange={handleCampusChange}
-                  placeholder={selectedUniversity ? 'Select campus...' : 'Select university first'}
+                  placeholder={
+                    selectedUniversity
+                      ? 'Select campus...'
+                      : 'Select university first'
+                  }
                   styles={selectStyles}
                   isDisabled={!selectedUniversity}
                   isClearable
@@ -233,119 +252,58 @@ export default function AddCoursePage() {
                 placeholder="Enter course name"
                 value={formData.courseName}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, courseName: e.target.value }))
+                  setFormData((prev) => ({
+                    ...prev,
+                    courseName: e.target.value
+                  }))
                 }
                 required
                 className="h-8"
               />
             </div>
 
-            {/* Course Description */}
-            <div className="space-y-1 pb-8">
-              <Label htmlFor="courseDescription" className="text-xs font-medium">
-                Course Description
-              </Label>
-              <ReactQuill
-                value={formData.courseDescription}
-                onChange={(value) =>
-                  setFormData((prev) => ({ ...prev, courseDescription: value }))
-                }
-                placeholder="Describe the course curriculum, duration, and goals..."
-                className="h-32 text-sm bg-white "
-                theme="snow"
-              />
-            </div>
+            <div className="flex flex-row items-center justify-between gap-4">
+           
 
-            {/* Learning Outcomes */}
-            <div className="space-y-1 pb-8">
-              <Label htmlFor="learningOutcomes" className="text-xs font-medium">
-                Learning Outcomes
-              </Label>
-              <ReactQuill
-                value={formData.learningOutcomes}
-                onChange={(value) =>
-                  setFormData((prev) => ({ ...prev, learningOutcomes: value }))
-                }
-                placeholder="List what students will learn by the end of this course..."
-                className="h-32 text-sm bg-white"
-                theme="snow"
-              />
-            </div>
-<div className='flex flex-row items-center gap-4 justify-between'>
+              {/* Cover PDF */}
+              <div className=" space-y-1">
+                <Label htmlFor="coverPdf" className="text-xs font-medium">
+                  Syllabus PDF
+                </Label>
+                <Input
+                  id="coverPdf"
+                  type="file"
+                  accept="application/pdf"
+                  onChange={(e) => handleFileChange(e, 'pdf')}
+                  className="h-8"
+                />
+                {pdfPreview && (
+                  <div className="mt-2">
+                    <a
+                      href={pdfPreview}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-blue-600 hover:underline"
+                    >
+                      View uploaded PDF
+                    </a>
+                  </div>
+                )}
+              </div>
 
-
-            {/* Cover Image */}
-            <div className="space-y-1 w-full">
-              <Label htmlFor="coverImage" className="text-xs font-medium">
-                Cover Image
-              </Label>
-              <Input
-                id="coverImage"
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileChange(e, 'image')}
-                className="h-8"
-              />
-              {imagePreview && (
-                <div className="mt-2">
-                  <img
-                    src={imagePreview}
-                    alt="Cover preview"
-                    className="h-20 w-auto rounded border object-cover"
-                  />
-                </div>
-              )}
+              
+              
             </div>
-
-            {/* Cover PDF */}
-            <div className="space-y-1 w-full">
-              <Label htmlFor="coverPdf" className="text-xs font-medium">
-                Syllabus PDF
-              </Label>
-              <Input
-                id="coverPdf"
-                type="file"
-                accept="application/pdf"
-                onChange={(e) => handleFileChange(e, 'pdf')}
-                className="h-8"
-              />
-              {pdfPreview && (
-                <div className="mt-2">
-                  <a
-                    href={pdfPreview}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-blue-600 hover:underline"
-                  >
-                    View uploaded PDF
-                  </a>
-                </div>
-              )}
-            </div>
-
-            {/* Cover Video URL */}
-            <div className="space-y-1 w-full">
-              <Label htmlFor="coverVideoUrl" className="text-xs font-medium">
-                Cover Video URL (YouTube/Vimeo)
-              </Label>
-              <Input
-                id="coverVideoUrl"
-                type="url"
-                placeholder="https://youtube.com/watch..."
-                value={formData.coverVideoUrl}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, coverVideoUrl: e.target.value }))
-                }
-                className="h-8 w-full"
-              />
-            </div>
-</div>
             {/* Submit Button */}
             <div className="flex justify-end pt-6">
               <Button
                 type="submit"
-                className="h-8 px-6 bg-theme text-white hover:bg-theme/90"
-                disabled={!formData.courseName || !formData.university || !formData.campus}
+                className="h-8 bg-theme px-6 text-white hover:bg-theme/90"
+                disabled={
+                  !formData.courseName ||
+                  !formData.university ||
+                  !formData.campus
+                }
               >
                 Create Course
               </Button>

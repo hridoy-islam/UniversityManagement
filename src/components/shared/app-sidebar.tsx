@@ -45,7 +45,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { BookOpen, Building, CalendarFold, ContactRound, UserRoundSearch } from "lucide-react";
+import { BookOpen, Building, CalendarFold, ClipboardPlus, ContactRound, UserRoundSearch } from "lucide-react";
 
 // Define the navigation structure
 const data = {
@@ -63,6 +63,11 @@ navMain: [
     icon: IconDashboard,
   },
 {
+    title: "Campus",
+    url: "campus",
+    icon: Building ,
+  },
+{
     title: "Intake",
     url: "intake",
     icon: CalendarFold ,
@@ -72,11 +77,11 @@ navMain: [
     url: "course",
     icon: BookOpen ,
   },
-  {
-    title: "University",
-    url: "university",
-    icon: Building ,
-  },
+  // {
+  //   title: "University",
+  //   url: "university",
+  //   icon: Building ,
+  // },
   {
     title: "Staff",
     url: "staff",
@@ -85,6 +90,17 @@ navMain: [
   {
     title: "Agent",
     url: "agent",
+    icon: UserRoundSearch   ,
+  },
+  {
+    title: "Applicant",
+    url: "applicant",
+    icon: ClipboardPlus    ,
+  },
+ 
+  {
+    title: "Student",
+    url: "student",
     icon: UserRoundSearch   ,
   },
  
