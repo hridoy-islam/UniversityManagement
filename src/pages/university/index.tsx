@@ -68,7 +68,7 @@ export default function UniversityPage() {
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
           <div>
             <div className="flex items-center gap-2">
-              <Building2 className="h-5 w-5 text-gray-600" />
+              
               <CardTitle className="text-2xl font-bold">University Management</CardTitle>
             </div>
             <CardDescription className="text-xs mt-1">
@@ -76,7 +76,7 @@ export default function UniversityPage() {
             </CardDescription>
           </div>
           <Link to="add">
-            <Button className="flex items-center gap-2 bg-theme text-white hover:bg-theme/90 text-xs h-8 px-3">
+            <Button className="flex items-center gap-2 text-xs bg-theme text-white hover:bg-theme/90">
               <Plus className="h-4 w-4" />
               Add University
             </Button>

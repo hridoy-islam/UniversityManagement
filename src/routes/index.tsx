@@ -17,6 +17,12 @@ import EditCoursePage from '@/pages/course/edit-course';
 import UniversityPage from '@/pages/university';
 import AddUniversityPage from '@/pages/university/add-university';
 import EditUniversityPage from '@/pages/university/edit-university';
+import StaffPage from '@/pages/staff';
+import AddStaffPage from '@/pages/staff/add-staff';
+import EditStaffPage from '@/pages/staff/edit-staff';
+import AgentPage from '@/pages/agent';
+import AddAgentPage from '@/pages/agent/add-agent';
+import EditAgentPage from '@/pages/agent/edit-agent';
 
 
 const SignInPage = lazy(() => import('@/pages/auth/signin'));
@@ -81,6 +87,30 @@ export default function AppRouter() {
         {
           path: 'university/edit/:id',
           element: <EditUniversityPage />
+        },
+        {
+          path: 'staff',
+          element: <StaffPage />
+        },
+        {
+          path: 'staff/add',
+          element: <AddStaffPage />
+        },
+        {
+          path: 'staff/edit-staff/:id',
+          element: <EditStaffPage />
+        },
+        {
+          path: 'agent',
+          element: <AgentPage />
+        },
+        {
+          path: 'agent/add',
+          element: <AddAgentPage />
+        },
+        {
+          path: 'agent/edit-agent/:id',
+          element: <EditAgentPage />
         },
         
       ]

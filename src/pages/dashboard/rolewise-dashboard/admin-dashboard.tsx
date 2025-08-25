@@ -33,8 +33,8 @@ export function AdminDashboard({ user }) {
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
-          <p className="text-gray-500">Academic overview and student engagement metrics</p>
+          <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+          <p className="text-gray-500 text-xs">Academic overview and student engagement metrics</p>
         </div>
        
       </div>
@@ -137,7 +137,7 @@ export function AdminDashboard({ user }) {
       <Card className="mt-6">
         <CardHeader>
           <CardTitle>Student Attendance Trend</CardTitle>
-          <CardDescription>Monthly average attendance rate across all programs</CardDescription>
+          <CardDescription className='text-xs'>Monthly average attendance rate across all programs</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={350}>

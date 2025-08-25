@@ -45,7 +45,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { BookOpen, Building, CalendarFold } from "lucide-react";
+import { BookOpen, Building, CalendarFold, ContactRound, UserRoundSearch } from "lucide-react";
 
 // Define the navigation structure
 const data = {
@@ -77,7 +77,17 @@ navMain: [
     url: "university",
     icon: Building ,
   },
-  // === Admission ===
+  {
+    title: "Staff",
+    url: "staff",
+    icon: ContactRound  ,
+  },
+  {
+    title: "Agent",
+    url: "agent",
+    icon: UserRoundSearch   ,
+  },
+ 
   {
     title: "Admission",
     icon: IconUserPlus,
