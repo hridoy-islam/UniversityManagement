@@ -92,12 +92,7 @@ navMain: [
     url: "agent",
     icon: UserRoundSearch   ,
   },
-  {
-    title: "Applicant",
-    url: "applicant",
-    icon: ClipboardPlus    ,
-  },
- 
+
   {
     title: "Student",
     url: "student",
@@ -108,7 +103,7 @@ navMain: [
     title: "Admission",
     icon: IconUserPlus,
     items: [
-      { title: "Applications", url: "#" },
+      { title: "Applications", url: "applicantions" },
       { title: "New Registrations", url: "#" },
       { title: "Student List", url: "#" },
       {

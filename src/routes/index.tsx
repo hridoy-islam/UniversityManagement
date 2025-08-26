@@ -141,11 +141,11 @@ export default function AppRouter() {
         },
         
         {
-          path: 'applicant',
+          path: 'applicantions',
           element: <ApplicantPage />
         },
         {
-          path: 'applicant/applicant-details',
+          path: 'applicantions/applicant-details',
           element: <ApplicantDetailsPage />
         },
       ]
