@@ -129,7 +129,7 @@ export default function StudentViewPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="flex items-center justify-end  py-3">
+      <header className="flex items-center justify-end  ">
         {/* <h1 className="text-2xl font-semibold">View Student</h1> */}
         <div className="flex items-center gap-2">
           <Button
@@ -156,13 +156,13 @@ export default function StudentViewPage() {
       />
 
       <Tabs defaultValue="personal" className="mt-1 px-2">
-        <TabsList className="flex flex-wrap justify-start h-20">
+        <TabsList className="flex flex-wrap justify-start ">
           {tabs.map(({ value, label }) => (
             <TabsTrigger key={value} value={value} className={activeTabClass}>
               {/* {<XCircle className="mr-2 h-4 w-4 text-red-600" />} */}
-             <div className='p-4'>
+            
               {label}
-              </div> 
+             
             </TabsTrigger>
           ))}
         </TabsList>

@@ -36,38 +36,17 @@ export function StudentProfile({ student = {}, fetchStudent }) {
 
   const address = student?.addressLine1 ? student : mockAddress;
 
-  // Mock functions for accept/reject
-  const handleAccept = () => {
-    if (!student._id) return;
-    console.log('Accepting application for:', student._id);
-    // TODO: Call API to accept
-  };
-
-  const handleReject = () => {
-    if (!student._id) return;
-    console.log('Rejecting application for:', student._id);
-    // TODO: Call API to reject
-  };
+ 
 
   return (
     <Card className="border-0 shadow-none text-xs">
       {/* Header with Action Buttons */}
-      <CardHeader className="flex flex-row items-center justify-between p-4 pb-2">
+      <CardHeader className="flex flex-row items-center justify-between  p-0 py-4">
         <CardTitle className="text-sm font-semibold">Student Application</CardTitle>
-        <div className="flex items-center gap-2">
-         
-
-          {/* Accept/Reject Buttons */}
-          <Button size="sm" variant="default" className="bg-green-600 hover:bg-green-700 text-white" onClick={handleAccept}>
-            Accept
-          </Button>
-          <Button size="sm" variant="destructive" onClick={handleReject}>
-            Reject
-          </Button>
-        </div>
+        
       </CardHeader>
 
-      <CardContent className="grid grid-cols-[auto,1fr,1fr] gap-6 p-4">
+      <CardContent className="grid grid-cols-[auto,1fr,1fr] gap-6 p-0 py-4">
         <div className="relative">
           <div className="relative h-32 w-32 overflow-hidden rounded-md">
             <img
@@ -96,24 +75,7 @@ export function StudentProfile({ student = {}, fetchStudent }) {
           </div>
 
           <div className="grid gap-1">
-            <div className="flex items-center gap-2">
-              <span className="font-medium">Reference No:</span>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">{student?.refId || 'N/A'}</span>
-                <button
-                  onClick={handleCopy}
-                  type="button"
-                  className="rounded p-1 transition hover:bg-gray-200"
-                  title="Copy Student ID"
-                >
-                  {copied ? (
-                    <Check className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <Copy className="h-4 w-4 text-gray-600" />
-                  )}
-                </button>
-              </div>
-            </div>
+            
 
             <div className="flex items-center gap-2">
               <span className="font-medium">Email:</span>

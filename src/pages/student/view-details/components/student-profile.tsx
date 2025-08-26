@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Camera, Check, Copy } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ImageUploader } from '@/components/shared/image-uploader';
 import moment from 'moment';
+import { Button } from '@/components/ui/button';
 
 const mockAddress = {
   addressLine1: '123 Main St',
@@ -39,7 +39,7 @@ export function StudentProfile({ student = {}, fetchStudent }) {
 
   return (
     <Card className="border-0 shadow-none text-xs">
-      <CardContent className="grid grid-cols-[auto,1fr,1fr] gap-6 p-4">
+      <CardContent className="grid grid-cols-[auto,1fr,1fr] gap-6 p-0 py-4">
         <div className="relative">
           <div className="relative h-32 w-32 overflow-hidden rounded-md">
             <img
@@ -68,24 +68,7 @@ export function StudentProfile({ student = {}, fetchStudent }) {
           </div>
 
           <div className="grid gap-1">
-            <div className="flex items-center gap-2">
-              <span className="font-medium">Reference No:</span>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">{student?.refId || 'N/A'}</span>
-                <button
-                  onClick={handleCopy}
-                  type="button"
-                  className="rounded p-1 transition hover:bg-gray-200"
-                  title="Copy Student ID"
-                >
-                  {copied ? (
-                    <Check className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <Copy className="h-4 w-4 text-gray-600" />
-                  )}
-                </button>
-              </div>
-            </div>
+            
 
             <div className="flex items-center gap-2">
               <span className="font-medium">Email:</span>

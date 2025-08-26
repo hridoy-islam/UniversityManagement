@@ -379,7 +379,7 @@ export default function DocumentsSection({
                           onClick={() =>
                             openImageUploader(id as keyof DocumentFile)
                           }
-                          className="ml-4 flex items-center space-x-2 rounded-lg bg-theme px-6 py-2 text-white transition-colors hover:bg-theme/90"
+                          className="  bg-theme  text-white transition-colors hover:bg-theme/90"
                         >
                           <Upload className="h-4 w-4" />
                           <span>Upload</span>

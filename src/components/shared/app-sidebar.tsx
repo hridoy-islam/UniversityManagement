@@ -96,7 +96,7 @@ navMain: [
   {
     title: "Student",
     url: "student",
-    icon: UserRoundSearch   ,
+    icon: UserRoundSearch  ,
   },
  
   {

@@ -123,11 +123,23 @@ export default function ApplicantDetailsPage() {
     );
   }
 
+  // Mock functions for accept/reject
+  const handleAccept = () => {
+    if (!student._id) return;
+    console.log('Accepting application for:', student._id);
+    // TODO: Call API to accept
+  };
+
+  const handleReject = () => {
+    if (!student._id) return;
+    console.log('Rejecting application for:', student._id);
+    // TODO: Call API to reject
+  };
+
   return (
     <div className="min-h-screen">
-      <header className="flex items-center justify-end  py-3">
-        {/* <h1 className="text-2xl font-semibold">View Student</h1> */}
-        <div className="flex items-center gap-2">
+      <header className="flex items-center justify-between ">
+        <div className="flex items-center justify-start gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -138,9 +150,21 @@ export default function ApplicantDetailsPage() {
             Back to List
           </Button>
 
-          <Button variant="outline" size="sm">
-            <Printer className="mr-2 h-4 w-4" />
-            Print
+          
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Accept/Reject Buttons */}
+          <Button
+            size="sm"
+            variant="default"
+            className="bg-green-600 text-white hover:bg-green-700"
+            onClick={handleAccept}
+          >
+            Accept
+          </Button>
+          <Button size="sm" variant="destructive" onClick={handleReject}>
+            Reject
           </Button>
         </div>
       </header>
@@ -151,11 +175,11 @@ export default function ApplicantDetailsPage() {
       />
 
       <Tabs defaultValue="personal" className="mt-1 px-2">
-        <TabsList className="flex h-20 flex-wrap justify-start">
+        <TabsList className="flex  flex-wrap justify-start">
           {tabs.map(({ value, label }) => (
             <TabsTrigger key={value} value={value} className={activeTabClass}>
               {/* {<XCircle className="mr-2 h-4 w-4 text-red-600" />} */}
-              <div className="p-4">{label}</div>
+             {label}
             </TabsTrigger>
           ))}
         </TabsList>

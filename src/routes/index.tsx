@@ -27,9 +27,12 @@ import CampusPage from '@/pages/campus';
 import AddCampusPage from '@/pages/campus/add-campus';
 import EditCampusPage from '@/pages/campus/edit-campus';
 import StudentPage from '@/pages/student';
-import StudentViewPage from '@/pages/student/log-manager';
 import ApplicantPage from '@/pages/applicant';
 import ApplicantDetailsPage from '@/pages/applicant/applicant-details';
+import StudentViewPage from '@/pages/student/view-details';
+import CourseModulePage from '@/pages/course/module';
+import AddModulePage from '@/pages/course/module/add-module';
+import EditModulePage from '@/pages/course/module/edit-module';
 
 
 const SignInPage = lazy(() => import('@/pages/auth/signin'));
@@ -74,6 +77,18 @@ export default function AppRouter() {
         {
           path: 'course',
           element: <CoursePage />
+        },
+        {
+          path: 'course/:id/modules',
+          element: <CourseModulePage />
+        },
+        {
+          path: 'course/:id/modules/new',
+          element: <AddModulePage />
+        },
+        {
+          path: 'course/:id/modules/:moduleId',
+          element: <EditModulePage />
         },
         {
           path: 'course/add-course',
@@ -136,7 +151,7 @@ export default function AppRouter() {
           element: <StudentPage />
         },
         {
-          path: 'student/log-manager',
+          path: 'student/info-manager',
           element: <StudentViewPage />
         },
         

@@ -10,9 +10,14 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Edit, Plus } from "lucide-react"
-import { Link } from "react-router-dom"
-
+import { Edit, EllipsisVertical, Plus } from "lucide-react"
+import { Link, useNavigate } from "react-router-dom"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 // Mock data for courses
 const mockCourses = [
   {
@@ -82,6 +87,8 @@ export default function CoursePage() {
     )
   }
 
+  const navigate = useNavigate()
+
   return (
     <div className="text-xs">
       <Card>
@@ -129,16 +136,37 @@ export default function CoursePage() {
                   </TableCell>
                   <TableCell className="text-xs">{getStatusBadge(course.status)}</TableCell>
                   <TableCell className="text-right">
-                    <Link to={`edit-course/${course.id}`}>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        className="flex items-center gap-1 bg-theme text-white hover:bg-theme/90 text-xs"
-                      >
-                        <Edit className="h-3 w-3" />
-                        Edit
-                      </Button>
-                    </Link>
+                    <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-xs text-black"
+                            >
+                              <EllipsisVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            className="border-gray-200 bg-white text-black"
+                            align="end"
+                          >
+                            <DropdownMenuItem
+                              className="text-xs hover:bg-theme"
+                               onClick={() => navigate(`edit-course/${course.id}`)}
+                            >
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-xs hover:bg-theme"
+                               onClick={() => navigate(`${course.id}/modules`)}
+                            >
+                              Modules
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-xs hover:bg-theme text-red-600">
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}
