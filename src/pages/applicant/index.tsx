@@ -5,7 +5,7 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
+  CardTitle
 } from '@/components/ui/card';
 import {
   Table,
@@ -13,16 +13,16 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { EllipsisVertical, Plus } from 'lucide-react';
+import { EllipsisVertical } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 
 // External libraries
@@ -44,7 +44,7 @@ const mockStudents = [
     dob: '2002-05-15',
     gender: 'Male',
     stage: 'Interview',
-    status: 'applied',
+    status: 'applied'
   },
   {
     id: 'STU002',
@@ -58,29 +58,35 @@ const mockStudents = [
     dob: '2001-11-22',
     gender: 'Female',
     stage: 'Offer Sent',
-    status: 'applied',
-  },
+    status: 'Pending'
+  }
 ];
 
 // Extract unique options for filters
-const campuses = [...new Set(mockStudents.map((s) => s.campus))].map((campus) => ({
-  value: campus,
-  label: campus,
-}));
+const campuses = [...new Set(mockStudents.map((s) => s.campus))].map(
+  (campus) => ({
+    value: campus,
+    label: campus
+  })
+);
 
-const intakes = [...new Set(mockStudents.map((s) => s.intake))].map((intake) => ({
-  value: intake,
-  label: intake,
-}));
+const intakes = [...new Set(mockStudents.map((s) => s.intake))].map(
+  (intake) => ({
+    value: intake,
+    label: intake
+  })
+);
 
-const courses = [...new Set(mockStudents.map((s) => s.courses))].map((course) => ({
-  value: course,
-  label: course,
-}));
+const courses = [...new Set(mockStudents.map((s) => s.courses))].map(
+  (course) => ({
+    value: course,
+    label: course
+  })
+);
 
 const statuses = [
   { value: 'applied', label: 'Applied' },
-  { value: 'Pending', label: 'Pending' },
+  { value: 'Pending', label: 'Pending' }
 ];
 
 export default function ApplicantPage() {
@@ -96,39 +102,39 @@ export default function ApplicantPage() {
   const [dob, setDob] = useState<Date | null>(null);
 
   // Status badge helper
- const getStatusBadge = (statuses: string | string[]) => {
-  const statusArray = Array.isArray(statuses) ? statuses : [statuses];
+  const getStatusBadge = (statuses: string | string[]) => {
+    const statusArray = Array.isArray(statuses) ? statuses : [statuses];
 
-  return (
-    <div className="flex flex-wrap gap-1">
-      {statusArray.map((status, idx) => {
-        if (status === "Enrolled") {
-          return (
-            <Badge
-              key={idx}
-              variant="default"
-              className="bg-green-100 text-green-800 hover:bg-green-100 text-xs"
-            >
-              Enrolled
-            </Badge>
-          );
-        } else if (status === "Pending") {
-          return (
-            <Badge key={idx} variant="secondary" className="text-xs">
-              Pending
-            </Badge>
-          );
-        } else {
-          return (
-            <Badge key={idx} variant="secondary" className="text-xs">
-              {status}
-            </Badge>
-          );
-        }
-      })}
-    </div>
-  );
-};
+    return (
+      <div className="flex flex-wrap gap-1">
+        {statusArray.map((status, idx) => {
+          if (status === 'Enrolled') {
+            return (
+              <Badge
+                key={idx}
+                variant="default"
+                className="bg-green-100 text-xs text-green-800 hover:bg-green-100"
+              >
+                Enrolled
+              </Badge>
+            );
+          } else if (status === 'Pending') {
+            return (
+              <Badge key={idx} variant="secondary" className="text-xs">
+                Pending
+              </Badge>
+            );
+          } else {
+            return (
+              <Badge key={idx} variant="secondary" className="text-xs">
+                {status}
+              </Badge>
+            );
+          }
+        })}
+      </div>
+    );
+  };
 
   // Filter logic
   const filteredStudents = students.filter((student) => {
@@ -139,14 +145,17 @@ export default function ApplicantPage() {
       student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.phone.includes(searchTerm);
 
-    const matchesCampus = !selectedCampus || student.campus === selectedCampus.value;
-    const matchesStatus = !selectedStatus || student.status === selectedStatus.value;
-    const matchesIntake = !selectedIntake || student.intake === selectedIntake.value;
-    const matchesCourse = !selectedCourse || student.courses === selectedCourse.value;
+    const matchesCampus =
+      !selectedCampus || student.campus === selectedCampus.value;
+    const matchesStatus =
+      !selectedStatus || student.status === selectedStatus.value;
+    const matchesIntake =
+      !selectedIntake || student.intake === selectedIntake.value;
+    const matchesCourse =
+      !selectedCourse || student.courses === selectedCourse.value;
 
     const dobDate = new Date(student.dob);
     const matchesDob = !dob || dobDate >= dob;
-
 
     return (
       matchesSearch &&
@@ -155,42 +164,34 @@ export default function ApplicantPage() {
       matchesIntake &&
       matchesCourse &&
       matchesDob
-    
     );
   });
 
   return (
     <div className="flex">
-      <div className="flex-1  space-y-6">
+      <div className="flex-1 space-y-6">
         <div>
           <CardTitle className="text-2xl font-bold">Application List</CardTitle>
-          <CardDescription className="text-xs">
-            Manage students, their applications, and enrollment status
-          </CardDescription>
         </div>
 
-        {/* Filters */}
+        {/* Combined Card: Filters + Table */}
         <Card>
-          <CardHeader className='py-4 '>
-            <CardTitle className="text-sm font-semibold">Filter Students</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Search Input */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <CardContent className="space-y-4 pt-4">
+            {/* Search & Filter Grid */}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               <div>
-                <label className="block text-xs font-medium mb-1">Search</label>
+                <label className="mb-1 block text-xs font-medium">Search</label>
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search Name, Email, Phone"
-                  className="w-full border border-gray-300 rounded px-3 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="Name, Email, Phone"
+                  className="w-full rounded border border-gray-300 px-3 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
-              {/* Campus Filter */}
               <div>
-                <label className="block text-xs font-medium mb-1">Campus</label>
+                <label className="mb-1 block text-xs font-medium">Campus</label>
                 <Select
                   options={campuses}
                   value={selectedCampus}
@@ -201,9 +202,8 @@ export default function ApplicantPage() {
                 />
               </div>
 
-              {/* Status Filter */}
               <div>
-                <label className="block text-xs font-medium mb-1">Status</label>
+                <label className="mb-1 block text-xs font-medium">Status</label>
                 <Select
                   options={statuses}
                   value={selectedStatus}
@@ -214,9 +214,8 @@ export default function ApplicantPage() {
                 />
               </div>
 
-              {/* Intake Filter */}
               <div>
-                <label className="block text-xs font-medium mb-1">Intake</label>
+                <label className="mb-1 block text-xs font-medium">Intake</label>
                 <Select
                   options={intakes}
                   value={selectedIntake}
@@ -227,9 +226,8 @@ export default function ApplicantPage() {
                 />
               </div>
 
-              {/* Course Filter */}
               <div>
-                <label className="block text-xs font-medium mb-1">Course</label>
+                <label className="mb-1 block text-xs font-medium">Course</label>
                 <Select
                   options={courses}
                   value={selectedCourse}
@@ -240,105 +238,112 @@ export default function ApplicantPage() {
                 />
               </div>
 
-              {/* DOB From */}
               <div>
-                <label className="block text-xs font-medium mb-1">DOB From</label>
+                <label className="mb-1 block text-xs font-medium">
+                  DOB From
+                </label>
                 <DatePicker
                   selected={dob}
                   onChange={(date: Date | null) => setDob(date)}
                   selectsStart
-                  value={dob}
-
                   dateFormat="yyyy-MM-dd"
-                  className="w-full border border-gray-300 rounded px-3 py-2.5 text-xs"
-                  placeholderText="Enter the DOB Date"
-                  wrapperClassName='w-full '
+                  className="w-full rounded border border-gray-300 px-3 py-2.5 text-xs"
+                  placeholderText="DOB Date"
                   isClearable
+                  wrapperClassName="w-full"
                 />
               </div>
-
-              
-            
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Student Table */}
-        <Card>
-          <CardContent className="py-4">
-           
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs">Name</TableHead>
-                  <TableHead className="text-xs">Campus</TableHead>
-                  <TableHead className="text-xs">Phone (Email)</TableHead>
-                  <TableHead className="text-xs">Intake</TableHead>
-                  <TableHead className="text-xs">Courses</TableHead>
-                  <TableHead className="text-xs">Dob</TableHead>
-                  <TableHead className="text-xs">Status</TableHead>
-                  <TableHead className="text-right text-xs">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredStudents.length > 0 ? (
-                  filteredStudents.map((student) => (
-                    <TableRow key={student.id}>
-                      <TableCell className="text-xs">
-                        {student.firstName} {student.lastName}
-                      </TableCell>
-                      <TableCell className="text-xs">{student.campus}</TableCell>
-                      <TableCell className="text-xs">
-                        {student.phone}
-                        <br />
-                        <span className="text-gray-500">{student.email}</span>
-                      </TableCell>
-                      <TableCell className="text-xs">{student.intake}</TableCell>
-                      <TableCell className="text-xs">{student.courses}</TableCell>
-                      <TableCell className="text-xs">
-                        {new Date(student.dob).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        {getStatusBadge(student.status)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-xs text-black"
+            {/* Table */}
+            <div className=" overflow-x-auto py-4">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs">Name</TableHead>
+                    <TableHead className="text-xs">Campus</TableHead>
+                    <TableHead className="text-xs">Phone (Email)</TableHead>
+                    <TableHead className="text-xs">Intake</TableHead>
+                    <TableHead className="text-xs">Courses</TableHead>
+                    <TableHead className="text-xs">Dob</TableHead>
+                    <TableHead className="text-xs">Status</TableHead>
+                    <TableHead className="text-right text-xs">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredStudents.length > 0 ? (
+                    filteredStudents.map((student, index) => (
+                      <TableRow
+                        key={student.id}
+                        className="transition-colors odd:bg-theme/5 even:bg-transparent hover:bg-gray-50"
+                      >
+                        <TableCell className="text-xs font-medium">
+                          {student.firstName} {student.lastName}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {student.campus}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {student.phone}
+                          <br />
+                          <span className="text-xs text-gray-500">
+                            {student.email}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {student.intake}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {student.courses}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {new Date(student.dob).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {getStatusBadge(student.status)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-xs text-black"
+                              >
+                                <EllipsisVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                              className="border-gray-200 bg-white text-black"
+                              align="end"
                             >
-                              <EllipsisVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            className="border-gray-200 bg-white text-black"
-                            align="end"
-                          >
-                            <DropdownMenuItem
-                              className="text-xs hover:bg-theme"
-                               onClick={() => navigate('applicant-details')}
-                            >
-                              View Applicant
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-xs hover:bg-theme text-red-600">
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                              <DropdownMenuItem
+                                className="text-xs hover:bg-theme"
+                                onClick={() => navigate('applicant-details')}
+                              >
+                                View Applicant
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-xs text-red-600 hover:bg-theme">
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={8}
+                        className="py-4 text-center text-xs text-gray-500"
+                      >
+                        No students match the selected filters.
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center text-xs text-gray-500 py-4">
-                      No students match the selected filters.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>

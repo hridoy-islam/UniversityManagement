@@ -33,6 +33,8 @@ import StudentViewPage from '@/pages/student/view-details';
 import CourseModulePage from '@/pages/course/module';
 import AddModulePage from '@/pages/course/module/add-module';
 import EditModulePage from '@/pages/course/module/edit-module';
+import EmailConfigPage from '@/pages/emails';
+import { DraftsManager } from '@/pages/drafts';
 
 
 const SignInPage = lazy(() => import('@/pages/auth/signin'));
@@ -162,6 +164,14 @@ export default function AppRouter() {
         {
           path: 'applicantions/applicant-details',
           element: <ApplicantDetailsPage />
+        },
+        {
+          path: 'emails',
+          element: <EmailConfigPage />
+        },
+        {
+          path: 'drafts',
+          element: <DraftsManager />
         },
       ]
     }

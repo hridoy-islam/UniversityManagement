@@ -5,7 +5,7 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
+  CardTitle
 } from '@/components/ui/card';
 import {
   Table,
@@ -13,16 +13,16 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { EllipsisVertical, Plus } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { EllipsisVertical } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 
 // External libraries
@@ -44,7 +44,7 @@ const mockStudents = [
     dob: '2002-05-15',
     gender: 'Male',
     stage: 'Interview',
-    status: 'Enrolled',
+    status: 'Enrolled'
   },
   {
     id: 'STU002',
@@ -58,29 +58,35 @@ const mockStudents = [
     dob: '2001-11-22',
     gender: 'Female',
     stage: 'Offer Sent',
-    status: 'Pending',
-  },
+    status: 'Pending'
+  }
 ];
 
 // Extract unique options for filters
-const campuses = [...new Set(mockStudents.map((s) => s.campus))].map((campus) => ({
-  value: campus,
-  label: campus,
-}));
+const campuses = [...new Set(mockStudents.map((s) => s.campus))].map(
+  (campus) => ({
+    value: campus,
+    label: campus
+  })
+);
 
-const intakes = [...new Set(mockStudents.map((s) => s.intake))].map((intake) => ({
-  value: intake,
-  label: intake,
-}));
+const intakes = [...new Set(mockStudents.map((s) => s.intake))].map(
+  (intake) => ({
+    value: intake,
+    label: intake
+  })
+);
 
-const courses = [...new Set(mockStudents.map((s) => s.courses))].map((course) => ({
-  value: course,
-  label: course,
-}));
+const courses = [...new Set(mockStudents.map((s) => s.courses))].map(
+  (course) => ({
+    value: course,
+    label: course
+  })
+);
 
 const statuses = [
   { value: 'Enrolled', label: 'Enrolled' },
-  { value: 'Pending', label: 'Pending' },
+  { value: 'Pending', label: 'Pending' }
 ];
 
 export default function StudentPage() {
@@ -103,7 +109,7 @@ export default function StudentPage() {
       </Badge>
     ) : (
       <Badge variant="secondary" className="text-xs">
-        Pending
+        {status}
       </Badge>
     );
   };
@@ -117,14 +123,17 @@ export default function StudentPage() {
       student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.phone.includes(searchTerm);
 
-    const matchesCampus = !selectedCampus || student.campus === selectedCampus.value;
-    const matchesStatus = !selectedStatus || student.status === selectedStatus.value;
-    const matchesIntake = !selectedIntake || student.intake === selectedIntake.value;
-    const matchesCourse = !selectedCourse || student.courses === selectedCourse.value;
+    const matchesCampus =
+      !selectedCampus || student.campus === selectedCampus.value;
+    const matchesStatus =
+      !selectedStatus || student.status === selectedStatus.value;
+    const matchesIntake =
+      !selectedIntake || student.intake === selectedIntake.value;
+    const matchesCourse =
+      !selectedCourse || student.courses === selectedCourse.value;
 
     const dobDate = new Date(student.dob);
     const matchesDob = !dob || dobDate >= dob;
-
 
     return (
       matchesSearch &&
@@ -133,42 +142,37 @@ export default function StudentPage() {
       matchesIntake &&
       matchesCourse &&
       matchesDob
-    
     );
   });
 
   return (
     <div className="flex">
-      <div className="flex-1  space-y-6">
+      <div className="flex-1 space-y-6 ">
+        {/* Single Card for Filters and Table */}
         <div>
-          <CardTitle className="text-2xl font-bold">Student List</CardTitle>
-          <CardDescription className="text-xs">
-            Manage students, their applications, and enrollment status
-          </CardDescription>
+          <CardTitle className="text-2xl font-bold">Application List</CardTitle>
         </div>
-
-        {/* Filters */}
         <Card>
-          <CardHeader className='py-4 '>
-            <CardTitle className="text-sm font-semibold">Filter Students</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Search Input */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+       
+
+          {/* Filters Section */}
+          <CardContent className="space-y-4 pt-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {/* Search */}
               <div>
-                <label className="block text-xs font-medium mb-1">Search</label>
+                <label className="mb-1 block text-xs font-medium">Search</label>
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search Name, Email, Phone"
-                  className="w-full border border-gray-300 rounded px-3 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="Name, Email, Phone"
+                  className="w-full rounded border border-gray-300 px-3 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
-              {/* Campus Filter */}
+              {/* Campus */}
               <div>
-                <label className="block text-xs font-medium mb-1">Campus</label>
+                <label className="mb-1 block text-xs font-medium">Campus</label>
                 <Select
                   options={campuses}
                   value={selectedCampus}
@@ -179,9 +183,9 @@ export default function StudentPage() {
                 />
               </div>
 
-              {/* Status Filter */}
+              {/* Status */}
               <div>
-                <label className="block text-xs font-medium mb-1">Status</label>
+                <label className="mb-1 block text-xs font-medium">Status</label>
                 <Select
                   options={statuses}
                   value={selectedStatus}
@@ -192,9 +196,9 @@ export default function StudentPage() {
                 />
               </div>
 
-              {/* Intake Filter */}
+              {/* Intake */}
               <div>
-                <label className="block text-xs font-medium mb-1">Intake</label>
+                <label className="mb-1 block text-xs font-medium">Intake</label>
                 <Select
                   options={intakes}
                   value={selectedIntake}
@@ -205,9 +209,9 @@ export default function StudentPage() {
                 />
               </div>
 
-              {/* Course Filter */}
+              {/* Course */}
               <div>
-                <label className="block text-xs font-medium mb-1">Course</label>
+                <label className="mb-1 block text-xs font-medium">Course</label>
                 <Select
                   options={courses}
                   value={selectedCourse}
@@ -220,31 +224,25 @@ export default function StudentPage() {
 
               {/* DOB From */}
               <div>
-                <label className="block text-xs font-medium mb-1">DOB From</label>
+                <label className="mb-1 block text-xs font-medium">
+                  DOB From
+                </label>
                 <DatePicker
                   selected={dob}
                   onChange={(date: Date | null) => setDob(date)}
                   selectsStart
-                  value={dob}
-
                   dateFormat="yyyy-MM-dd"
-                  className="w-full border border-gray-300 rounded px-3 py-2.5 text-xs"
-                  placeholderText="Enter the DOB Date"
-                  wrapperClassName='w-full '
+                  placeholderText="Select DOB"
                   isClearable
+                  wrapperClassName="w-full"
+                  className="w-full rounded border border-gray-300 px-3 py-2.5 text-xs"
                 />
               </div>
-
-              
-            
             </div>
           </CardContent>
-        </Card>
 
-        {/* Student Table */}
-        <Card>
+          {/* Student Table */}
           <CardContent className="py-4">
-           
             <Table>
               <TableHeader>
                 <TableRow>
@@ -253,7 +251,7 @@ export default function StudentPage() {
                   <TableHead className="text-xs">Phone (Email)</TableHead>
                   <TableHead className="text-xs">Intake</TableHead>
                   <TableHead className="text-xs">Courses</TableHead>
-                  <TableHead className="text-xs">Dob</TableHead>
+                  <TableHead className="text-xs">DOB</TableHead>
                   <TableHead className="text-xs">Status</TableHead>
                   <TableHead className="text-right text-xs">Action</TableHead>
                 </TableRow>
@@ -261,18 +259,29 @@ export default function StudentPage() {
               <TableBody>
                 {filteredStudents.length > 0 ? (
                   filteredStudents.map((student) => (
-                    <TableRow key={student.id}>
-                      <TableCell className="text-xs">
+                    <TableRow
+                      key={student.id}
+                      className="transition-colors odd:bg-theme/5 even:bg-transparent hover:bg-gray-50"
+                    >
+                      <TableCell className="text-xs font-medium">
                         {student.firstName} {student.lastName}
                       </TableCell>
-                      <TableCell className="text-xs">{student.campus}</TableCell>
+                      <TableCell className="text-xs">
+                        {student.campus}
+                      </TableCell>
                       <TableCell className="text-xs">
                         {student.phone}
                         <br />
-                        <span className="text-gray-500">{student.email}</span>
+                        <span className="text-xs text-gray-500">
+                          {student.email}
+                        </span>
                       </TableCell>
-                      <TableCell className="text-xs">{student.intake}</TableCell>
-                      <TableCell className="text-xs">{student.courses}</TableCell>
+                      <TableCell className="text-xs">
+                        {student.intake}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {student.courses}
+                      </TableCell>
                       <TableCell className="text-xs">
                         {new Date(student.dob).toLocaleDateString()}
                       </TableCell>
@@ -295,12 +304,12 @@ export default function StudentPage() {
                             align="end"
                           >
                             <DropdownMenuItem
-                              className="text-xs hover:bg-theme"
-                               onClick={() => navigate('info-manager')}
+                              className="cursor-pointer text-xs hover:bg-theme"
+                              onClick={() => navigate('info-manager')}
                             >
                               View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-xs hover:bg-theme text-red-600">
+                            <DropdownMenuItem className="cursor-pointer text-xs text-red-600 hover:bg-theme">
                               Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -310,7 +319,10 @@ export default function StudentPage() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-xs text-gray-500 py-4">
+                    <TableCell
+                      colSpan={8}
+                      className="py-6 text-center text-xs text-gray-500"
+                    >
                       No students match the selected filters.
                     </TableCell>
                   </TableRow>

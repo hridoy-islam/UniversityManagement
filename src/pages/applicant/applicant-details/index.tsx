@@ -1,12 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Printer, Plus, XCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowLeft} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StudentProfile } from './components/student-profile';
 import { PersonalDetailsForm } from './components/personal-details-form';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { SendEmailComponent } from './components/send-email-component';
-import { NotesPage } from './components/notes';
+import {  useNavigate, useParams } from 'react-router-dom';
 
 import { useToast } from '@/components/ui/use-toast';
 
@@ -14,6 +12,9 @@ import { useSelector } from 'react-redux';
 import { BlinkingDots } from '@/components/shared/blinking-dots';
 import EducationSection from './components/education-section';
 import DocumentsSection from './components/documents-section';
+import CommunicationPage from './components/communication-section';
+import NotePage from './components/note-page';
+import ProcessesPage from './components/processes-page';
 
 // Mock Student Data
 const mockStudent = {
@@ -111,8 +112,10 @@ export default function ApplicantDetailsPage() {
   const tabs = [
     { value: 'personal', label: 'Personal Details' },
     { value: 'education', label: 'Education' },
-
-    { value: 'documents', label: 'Documents' }
+    { value: 'communication', label: 'Communication' },
+    { value: 'documents', label: 'Uploaded Files' },
+    { value: 'notes', label: 'Notes' },
+    { value: 'Processes', label: 'Processes' }
   ];
 
   if (initialLoading) {
@@ -149,8 +152,6 @@ export default function ApplicantDetailsPage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to List
           </Button>
-
-          
         </div>
 
         <div className="flex items-center gap-2">
@@ -178,8 +179,7 @@ export default function ApplicantDetailsPage() {
         <TabsList className="flex  flex-wrap justify-start">
           {tabs.map(({ value, label }) => (
             <TabsTrigger key={value} value={value} className={activeTabClass}>
-              {/* {<XCircle className="mr-2 h-4 w-4 text-red-600" />} */}
-             {label}
+              {label}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -198,6 +198,15 @@ export default function ApplicantDetailsPage() {
         </TabsContent>
         <TabsContent value="education">
           <EducationSection student={student} onSave={handleSave} />
+        </TabsContent>
+        <TabsContent value="communication">
+          <CommunicationPage student={student} onSave={handleSave} />
+        </TabsContent>
+        <TabsContent value="notes">
+          <NotePage student={student} onSave={handleSave} />
+        </TabsContent>
+        <TabsContent value="Processes">
+          <ProcessesPage student={student} onSave={handleSave} />
         </TabsContent>
       </Tabs>
     </div>
