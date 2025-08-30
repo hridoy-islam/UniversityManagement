@@ -3,8 +3,6 @@ import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
   CardTitle
 } from '@/components/ui/card';
 import {
@@ -17,7 +15,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { EllipsisVertical } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -94,12 +92,29 @@ export default function ApplicantPage() {
   const [students] = useState(mockStudents);
 
   // Filter states
+  const [pendingSearch, setPendingSearch] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCampus, setSelectedCampus] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedIntake, setSelectedIntake] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [dob, setDob] = useState<Date | null>(null);
+
+  // Handle search click
+  const handleSearch = () => {
+    setSearchTerm(pendingSearch);
+  };
+
+  // Handle reset click
+  const handleReset = () => {
+    setPendingSearch('');
+    setSearchTerm('');
+    setSelectedCampus(null);
+    setSelectedStatus(null);
+    setSelectedIntake(null);
+    setSelectedCourse(null);
+    setDob(null);
+  };
 
   // Status badge helper
   const getStatusBadge = (statuses: string | string[]) => {
@@ -181,13 +196,16 @@ export default function ApplicantPage() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               <div>
                 <label className="mb-1 block text-xs font-medium">Search</label>
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Name, Email, Phone"
-                  className="w-full rounded border border-gray-300 px-3 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={pendingSearch}
+                    onChange={(e) => setPendingSearch(e.target.value)}
+                    placeholder="Name, Email, Phone"
+                    className="w-full rounded border border-gray-300 px-3 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                 
+                </div>
               </div>
 
               <div>
@@ -253,6 +271,14 @@ export default function ApplicantPage() {
                   wrapperClassName="w-full"
                 />
               </div>
+            
+                 <Button variant="default" size="sm" onClick={handleSearch} className='h-9 mt-5'>
+                    Search
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleReset}className='h-9 mt-5'>
+                    Reset
+                  </Button>
+            
             </div>
 
             {/* Table */}
@@ -272,7 +298,7 @@ export default function ApplicantPage() {
                 </TableHeader>
                 <TableBody>
                   {filteredStudents.length > 0 ? (
-                    filteredStudents.map((student, index) => (
+                    filteredStudents.map((student) => (
                       <TableRow
                         key={student.id}
                         className="transition-colors odd:bg-theme/5 even:bg-transparent hover:bg-gray-50"

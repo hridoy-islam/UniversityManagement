@@ -110,7 +110,7 @@ export default function ApplicantDetailsPage() {
 
   // Define tabs
   const tabs = [
-    { value: 'personal', label: 'Personal Details' },
+    { value: 'personal', label: 'Personal Info' },
     { value: 'education', label: 'Education' },
     { value: 'communication', label: 'Communication' },
     { value: 'documents', label: 'Uploaded Files' },

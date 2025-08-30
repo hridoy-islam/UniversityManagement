@@ -1,420 +1,209 @@
-import { useState } from 'react';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from "react";
+import { Eye, Plus, Trash2, Search, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
-  Trash2,
-  FileText,
-  ExternalLink,
-  Upload,
-  CheckCircle
-} from 'lucide-react';
-import { z } from 'zod';
-import { ImageUploader } from './document-uploader';
-import { useSelector } from 'react-redux';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { DocumentDialog } from "./document-dialog";
+import { Link } from "react-router-dom";
 
-// Zod validation schema
-export const documentSchema = z.object({
-  cvResume: z.string().min(1, { message: 'Resume is required' }),
-  image: z.string().optional(),
-  proofOfAddress: z.array(z.string()).nonempty({
-    message: 'Proof of address is required'
-  }),
-  passport: z.array(z.string()).nonempty({
-    message: 'Passport or ID is required'
-  }),
-  workExperience: z.array(z.string()).optional(),
-  personalStatement: z.array(z.string()).optional(),
-  immigrationDocument: z.array(z.string()).optional()
-});
+export default function DocumentsSectionMock() {
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState("All");
 
-export type DocumentFile = z.infer<typeof documentSchema>;
+  // Load mock data initially
+  useEffect(() => {
+    const mockDocs = [
+      {
+        _id: "1",
+        file_type: "Passport",
+        checked: "Yes",
+        uploadedBy: "Admin",
+        uploadDate: "2025-08-30",
+        fileUrl: "https://example.com/passport.pdf",
+      },
+      {
+        _id: "2",
+        file_type: "Transcript",
+        checked: "No",
+        uploadedBy: "Student",
+        uploadDate: "2025-08-28",
+        fileUrl: "https://example.com/transcript.pdf",
+      },
+      {
+        _id: "3",
+        file_type: "CV",
+        checked: "Yes",
+        uploadedBy: "Admin",
+        uploadDate: "2025-08-25",
+        fileUrl: "https://example.com/cv.pdf",
+      },
+    ];
+    setDocuments(mockDocs);
+  }, []);
 
-interface DocumentDataProps {
-  student: DocumentFile;
-
-  onSave: (documents: DocumentFile) => void;
-}
-
-export default function DocumentsSection({
-  student,
-  onSave
-}: DocumentDataProps) {
-  const [documents, setDocuments] = useState<DocumentFile>(student);
-  const [uploadState, setUploadState] = useState<{
-    isOpen: boolean;
-    field: keyof DocumentFile | null;
-  }>({
-    isOpen: false,
-    field: null
-  });
-  const { user } = useSelector((state: any) => state.auth);
-
-  const [validationErrors, setValidationErrors] = useState<
-    Record<string, string>
-  >({});
-
-  const handleRemoveFile = (field: keyof DocumentFile, fileName: string) => {
-    if (typeof documents[field] === 'string') {
-      setDocuments((prev) => ({
-        ...prev,
-        [field]: ''
-      }));
-    } else {
-      setDocuments((prev) => ({
-        ...prev,
-        [field]: (prev[field] as string[]).filter((file) => file !== fileName)
-      }));
-    }
+  // Handle document upload (mock)
+  const handleUpload = () => {
+    const newDoc = {
+      _id: String(documents.length + 1),
+      file_type: "New File",
+      checked: "No",
+      uploadedBy: "Student",
+      uploadDate: new Date().toISOString().slice(0, 10),
+      fileUrl: "https://example.com/new-file.pdf",
+    };
+    setDocuments([...documents, newDoc]);
+    setDialogOpen(false);
   };
 
-  const hasChanges = () => {
-    return JSON.stringify(student) !== JSON.stringify(documents);
+  // Handle delete confirmation
+  const confirmDelete = (id: string) => {
+    setDeleteDialog(id);
   };
 
-  const handleSubmit = () => {
-    const validationResult = documentSchema.safeParse(documents);
-    if (!validationResult.success) {
-      const errors: Record<string, string> = {};
-      validationResult.error.issues.forEach((issue) => {
-        errors[issue.path[0]] = issue.message;
-      });
-      setValidationErrors(errors);
-      return;
-    }
-    setValidationErrors({});
-    onSave(documents);
+  const cancelDelete = () => {
+    setDeleteDialog(null);
   };
 
-  const renderUploadedFiles = (field: keyof DocumentFile) => {
-    const value = documents[field];
-
-    // Handle single file (string)
-    if (field === 'image' || field === 'cvResume') {
-      const fileUrl = value as string | undefined;
-
-      if (fileUrl && typeof fileUrl === 'string' && fileUrl.trim() !== '') {
-        try {
-          const fileName = decodeURIComponent(
-            fileUrl.split('/').pop() || 'Document'
-          );
-          return (
-            <div className="mt-3 space-y-2">
-              <div className="flex w-auto items-center justify-between rounded-lg border border-gray-200 bg-white p-3 transition-all hover:shadow-md">
-                <div className="flex items-center space-x-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex min-w-0 flex-1 gap-2">
-                      <a
-                        href={fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center space-x-2 text-sm font-medium text-gray-900 transition-colors hover:text-theme/90"
-                      >
-                        <Button className="flex flex-row items-center gap-4 bg-theme text-white hover:bg-theme/90">
-                          View{' '}
-                          <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                        </Button>
-                      </a>
-                    </div>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleRemoveFile(field, fileUrl)}
-                  className="h-8 w-8 p-0 text-gray-400 hover:bg-red-50 hover:text-red-500"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          );
-        } catch (err) {
-          console.error('Invalid URL:', fileUrl);
-          return (
-            <p key="error" className="text-xs text-red-500">
-              Invalid file URL
-            </p>
-          );
-        }
-      }
-      return null;
-    }
-
-    // Handle array of files
-    if (Array.isArray(value)) {
-      const validUrls = value.filter(
-        (url): url is string => typeof url === 'string' && url.trim() !== ''
-      );
-
-      if (validUrls.length > 0) {
-        return (
-          <div className="mt-3 space-y-2">
-            {validUrls.map((fileUrl, index) => {
-              let fileName = `File-${index}`;
-              try {
-                fileName = decodeURIComponent(
-                  fileUrl.split('/').pop() || fileName
-                );
-              } catch (e) {
-                fileName = `Corrupted-File-${index}`;
-              }
-
-              return (
-                <div
-                  key={`${fileUrl}-${index}`}
-                  className="flex w-auto items-center justify-between rounded-lg border border-gray-200 bg-white p-3 transition-all hover:shadow-md"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="flex min-w-0 flex-1 gap-2">
-                      <a
-                        href={fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center space-x-2 text-sm font-medium text-gray-900 transition-colors hover:text-theme/90"
-                      >
-                        <Button className="flex flex-row items-center gap-4 bg-theme text-white hover:bg-theme/90">
-                          View{' '}
-                          <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                        </Button>
-                      </a>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRemoveFile(field, fileUrl)}
-                    className="h-8 w-8 p-0 text-gray-400 hover:bg-red-50 hover:text-red-500"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              );
-            })}
-          </div>
-        );
-      }
-    }
-
-    return null;
-  };
-  const openImageUploader = (field: keyof DocumentFile) => {
-    setUploadState({ isOpen: true, field });
+  const performDelete = () => {
+    setDocuments(documents.filter((doc) => doc._id !== deleteDialog));
+    setDeleteDialog(null);
   };
 
-  const handleUploadComplete = (uploadResponse: any) => {
-    const { field } = uploadState;
-    if (!field || !uploadResponse?.success || !uploadResponse.data?.fileUrl) {
-      setUploadState({ isOpen: false, field: null });
-      return;
-    }
-    const fileUrl = uploadResponse.data.fileUrl;
-    if (typeof documents[field] === 'string') {
-      setDocuments((prev) => ({
-        ...prev,
-        [field]: fileUrl
-      }));
-    } else {
-      setDocuments((prev) => ({
-        ...prev,
-        [field]: [...(prev[field] as string[]), fileUrl]
-      }));
-    }
-    setUploadState({ isOpen: false, field: null });
-  };
-
-  const documentTypes = [
-    {
-      id: 'cvResume',
-      label: 'Resume',
-      required: true,
-      instructions: 'Upload your CV or Resume',
-      formats: 'PDF, JPG, PNG',
-      error: validationErrors.cvResume,
-      icon: FileText
-    },
-    {
-      id: 'proofOfAddress',
-      label: 'Proof of Address',
-      required: true,
-      instructions:
-        'Upload recent utility bill or bank statement showing your address',
-      formats: 'PDF, JPG, PNG',
-      error: validationErrors.proofOfAddress,
-      icon: FileText
-    },
-    {
-      id: 'passport',
-      label: 'Passport or UK ID',
-      required: true,
-      instructions:
-        'Please upload a clear copy of your valid passport, BRP, or UK driving licence',
-      formats: 'PDF, JPG, PNG',
-      error: validationErrors.proofOfAddress,
-      icon: FileText
-    },
-    {
-      id: 'immigrationDocument',
-      label: 'Immigration Documents',
-      required: false,
-      instructions:
-        'Upload any relevant visas, permits, or immigration-related documents.',
-      formats: 'PDF, JPG, PNG',
-      uploadLabel: 'You can upload multiple files',
-      icon: FileText
-    },
-    {
-      id: 'workExperience',
-      label: 'Work Experience Documents',
-      required: false,
-      instructions: 'Upload relevant work experience documents',
-      formats: 'PDF, JPG, PNG',
-      uploadLabel: 'You can upload multiple files',
-      icon: FileText
-    },
-    {
-      id: 'personalStatement',
-      label: 'Personal Statement',
-      required: false,
-      instructions: 'Upload your personal statement',
-      formats: 'PDF, DOCX, TXT',
-      icon: FileText
-    }
-  ];
+  // Filter documents
+  const filteredDocuments =
+    documents.filter((doc) => {
+      const matchesQuery = doc.file_type
+        .toLowerCase()
+        .includes(query.toLowerCase());
+      const matchesStatus =
+        status === "All" ||
+        (status === "Active" && doc.checked === "Yes") ||
+        (status === "Inactive" && doc.checked !== "Yes");
+      return matchesQuery && matchesStatus;
+    }) || [];
 
   return (
-    <div className="">
-      <Card className="border-0 shadow-none p-0">
-        <CardHeader className="p-0">
+    <div className="space-y-4 rounded-md p-4 shadow-sm border border-gray-300  bg-white">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h2 className="text-lg font-semibold">Documents</h2>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            className="bg-theme text-white hover:bg-theme"
+            onClick={() => setDialogOpen(true)}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Document
+          </Button>
          
-              <h2 className="text-2xl font-bold text-gray-900 pb-4">Document</h2>
-  
-        
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 ">
-            {documentTypes.map(
-              ({
-                id,
-                label,
-                required,
-                instructions,
-                formats,
-                error,
-                icon: Icon,
-                uploadLabel
-              }) => {
-                const hasFiles =
-                  typeof documents[id as keyof DocumentFile] === 'string'
-                    ? (documents[id as keyof DocumentFile] as string).length > 0
-                    : Array.isArray(documents[id as keyof DocumentFile]) &&
-                      (documents[id as keyof DocumentFile] as string[]).length >
-                        0;
-                return (
-                  <div
-                    key={id}
-                    className={`rounded-xl border-2 transition-all ${
-                      error
-                        ? 'border-red-200 bg-red-50'
-                        : hasFiles
-                          ? 'border-gray-100 bg-gray-50 hover:border-gray-200'
-                          : 'border-gray-100 bg-gray-50 hover:border-gray-200'
+        </div>
+      </div>
+
+      
+      {/* Table */}
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Checked</TableHead>
+            <TableHead>Uploaded By</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredDocuments.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center py-6 text-gray-500">
+                No documents found
+              </TableCell>
+            </TableRow>
+          ) : (
+            filteredDocuments.map((doc) => (
+              <TableRow
+                key={doc._id}
+                className="hover:bg-gray-50 transition-colors duration-150"
+              >
+                <TableCell className="font-medium">{doc.file_type}</TableCell>
+                <TableCell>
+                  <span
+                    className={`px-2 py-0.5 text-xs font-medium rounded ${
+                      doc.checked === "Yes"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-yellow-100 text-yellow-800"
                     }`}
                   >
-                    <div className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="mb-2 flex items-center space-x-3">
-                            <div
-                              className={`rounded-lg p-2 ${
-                                error
-                                  ? 'bg-red-100'
-                                  : hasFiles
-                                    ? 'bg-gray-100'
-                                    : 'bg-gray-100'
-                              }`}
-                            >
-                              <Icon
-                                className={`h-5 w-5 ${
-                                  error
-                                    ? 'text-red-600'
-                                    : hasFiles
-                                      ? 'text-green-600'
-                                      : 'text-gray-600'
-                                }`}
-                              />
-                            </div>
-                            <div>
-                              <h3 className="flex items-center text-lg font-semibold text-gray-900">
-                                {label}
-                                {required && (
-                                  <span className="ml-2 text-red-500">*</span>
-                                )}
-                                {hasFiles && (
-                                  <CheckCircle className="ml-2 h-5 w-5 text-green-600" />
-                                )}
-                              </h3>
-                              <p className="text-sm text-gray-600">
-                                {instructions}
-                              </p>
-                              <p className="mt-1 text-xs text-gray-500">
-                                Accepted formats: {formats}
-                              </p>
-                              {uploadLabel && (
-                                <p className="mt-1 text-xs font-semibold text-gray-800">
-                                  {uploadLabel}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                          {error && (
-                            <div className="mt-2 rounded-lg border border-red-200 bg-red-100 p-3">
-                              <p className="text-sm font-medium text-red-700">
-                                {error}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                        <Button
-                          type="button"
-                          onClick={() =>
-                            openImageUploader(id as keyof DocumentFile)
-                          }
-                          className="  bg-theme  text-white transition-colors hover:bg-theme/90"
-                        >
-                          <Upload className="h-4 w-4" />
-                          <span>Upload</span>
-                        </Button>
-                      </div>
-                      {renderUploadedFiles(id as keyof DocumentFile)}
-                    </div>
+                    {doc.checked}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm font-medium">{doc.uploadedBy}</div>
+                  <div className="text-xs text-gray-500">{doc.uploadDate}</div>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end space-x-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-blue-600 hover:bg-blue-700"
+                    >
+                      <Link
+                        to={doc.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-red-600 hover:bg-red-700"
+                      onClick={() => confirmDelete(doc._id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                );
-              }
-            )}
-          </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-end pt-8">
-            {hasChanges() && (
-              <Button
-                type="button"
-                onClick={handleSubmit}
-                className="bg-theme text-white hover:bg-theme/90"
-              >
-                Save
+      {/* Delete Confirmation Modal */}
+      {deleteDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+            <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
+            <p className="mb-4">Are you sure you want to delete this document?</p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={cancelDelete}>
+                Cancel
               </Button>
-            )}
+              <Button variant="destructive" onClick={performDelete}>
+                Delete
+              </Button>
+            </div>
           </div>
-          <ImageUploader
-            open={uploadState.isOpen}
-            onOpenChange={(isOpen) =>
-              setUploadState((prev) => ({ ...prev, isOpen }))
-            }
-            onUploadComplete={handleUploadComplete}
-            entityId={user?._id}
-          />
-        </CardContent>
-      </Card>
+        </div>
+      )}
+
+      {/* Document Dialog (mock submission just adds a new record) */}
+      <DocumentDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSubmit={handleUpload}
+        entityId="mock-student-123"
+      />
     </div>
   );
 }
