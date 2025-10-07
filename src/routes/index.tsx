@@ -35,6 +35,8 @@ import AddModulePage from '@/pages/course/module/add-module';
 import EditModulePage from '@/pages/course/module/edit-module';
 import EmailConfigPage from '@/pages/emails';
 import { DraftsManager } from '@/pages/drafts';
+import CourseUnitPage from '@/pages/course/courseUnit';
+import CourseModule from '@/pages/course/courseUnit/courseResource';
 
 
 const SignInPage = lazy(() => import('@/pages/auth/signin'));
@@ -82,15 +84,15 @@ export default function AppRouter() {
         },
         {
           path: 'course/:id/modules',
-          element: <CourseModulePage />
+          element: <CourseUnitPage />
         },
         {
           path: 'course/:id/modules/new',
           element: <AddModulePage />
         },
         {
-          path: 'course/:id/modules/:moduleId',
-          element: <EditModulePage />
+          path: 'course/:id/modules/:unitId',
+          element: <CourseModule />
         },
         {
           path: 'course/add-course',

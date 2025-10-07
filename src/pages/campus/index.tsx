@@ -1,34 +1,42 @@
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Edit, Plus } from "lucide-react"
-import { Link } from "react-router-dom"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Edit, Plus } from "lucide-react";
+import { Link } from "react-router-dom";
+import axiosInstance from "@/lib/axios";
 
-// Mock data for campuses
-const mockCampuses = [
-  {
-    id: 1,
-    name: "Watney College, Nelson Street",
-    contactPerson: "John Smith",
-    logo: "https://via.placeholder.com/60x60.png?text=Watney",
-  },
-  {
-    id: 2,
-    name: "Downtown Campus",
-    contactPerson: "Sarah Johnson",
-    logo: "https://via.placeholder.com/60x60.png?text=Downtown",
-  },
-  {
-    id: 3,
-    name: "Riverside Campus",
-    contactPerson: "Michael Brown",
-    logo: "https://via.placeholder.com/60x60.png?text=Riverside",
-  },
-]
+interface CampusType {
+  _id: string;
+  campusName: string;
+  contactPerson: string;
+  logo: string;
+}
 
 export default function CampusPage() {
-  const [campuses] = useState(mockCampuses)
+  const [campuses, setCampuses] = useState<CampusType[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCampuses = async () => {
+      try {
+        const res = await axiosInstance.get("/campuses");
+        // Assuming your API returns { success, message, data: { result: CampusType[] } }
+        const campusData = res.data.data.result;
+        setCampuses(campusData);
+      } catch (error) {
+        console.error("Failed to fetch campuses:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCampuses();
+  }, []);
+
+  if (loading) {
+    return <p className="text-xs text-center mt-4">Loading campuses...</p>;
+  }
 
   return (
     <div className="text-xs">
@@ -59,18 +67,22 @@ export default function CampusPage() {
             </TableHeader>
             <TableBody>
               {campuses.map((campus) => (
-                <TableRow key={campus.id}>
-                  <TableCell className="font-medium text-xs">{campus.name}</TableCell>
+                <TableRow key={campus._id}>
+                  <TableCell className="font-medium text-xs">{campus.campusName}</TableCell>
                   <TableCell className="text-xs">{campus.contactPerson}</TableCell>
                   <TableCell>
-                    <img
-                      src={campus.logo}
-                      alt={campus.name}
-                      className="h-10 w-10 object-cover rounded-full border"
-                    />
+                    {campus.logo ? (
+                      <img
+                        src={campus.logo}
+                        alt={campus.campusName}
+                        className="h-10 w-10 object-cover rounded-full border"
+                      />
+                    ) : (
+                      <span className="text-gray-400 text-xs">No Logo</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-right flex justify-end">
-                    <Link to={`edit-campus/${campus.id}`}>
+                    <Link to={`edit-campus/${campus._id}`}>
                       <Button
                         variant="default"
                         size="sm"
@@ -88,5 +100,5 @@ export default function CampusPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

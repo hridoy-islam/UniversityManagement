@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -18,65 +18,28 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-// Mock data for courses
-const mockCourses = [
-  {
-    id: 1,
-    name: "Entry Level Certificate in ESOL International All Modes (Entry 3)",
-    description: "Develops foundational English skills in reading, writing, speaking, and listening for non-native speakers.",
-    campus: "Watney College, Nelson Street",
-    sector: "Languages",
-    owner: "Sarah Johnson",
-    addedOn: "2023-11-15",
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Focus Awards Level 3 Diploma in Business Administration",
-    description: "Comprehensive program covering business operations, management, and administration practices.",
-    campus: "Downtown Campus",
-    sector: "Business",
-    owner: "Michael Chen",
-    addedOn: "2023-10-22",
-    status: "Active",
-  },
-  {
-    id: 3,
-    name: "Level 2 Adult Social Care Certificate",
-    description: "Prepares learners for roles in adult care settings with focus on safeguarding, communication, and duty of care.",
-    campus: "Watney College, Nelson Street",
-    sector: "Health & Social Care",
-    owner: "Emma Davis",
-    addedOn: "2024-01-05",
-    status: "Inactive",
-  },
-  {
-    id: 4,
-    name: "Certificate in Digital Marketing",
-    description: "Covers SEO, social media marketing, email campaigns, and analytics for modern marketers.",
-    campus: "Downtown Campus",
-    sector: "IT & Digital",
-    owner: "Alex Turner",
-    addedOn: "2023-12-10",
-    status: "Active",
-  },
-  {
-    id: 5,
-    name: "Diploma in Early Childhood Education",
-    description: "Trains educators in child development, curriculum planning, and inclusive learning environments.",
-    campus: "North Campus",
-    sector: "Education",
-    owner: "Linda Park",
-    addedOn: "2024-02-18",
-    status: "Active",
-  },
-]
+import axiosInstance from "@/lib/axios"
+import moment from "moment"
 
 export default function CoursePage() {
-  const [courses] = useState(mockCourses)
+  const [courses, setCourses] = useState<any[]>([])
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const res = await axiosInstance.get("/course")
+        // assuming your API returns data in res.data.data.result
+        setCourses(res.data.data.result)
+      } catch (error) {
+        console.error("Failed to fetch courses:", error)
+      }
+    }
+    fetchCourses()
+  }, [])
 
   const getStatusBadge = (status: string) => {
-    return status === "Active" ? (
+    return status.toLowerCase() === "active" ? (
       <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100 text-xs">
         Active
       </Badge>
@@ -86,8 +49,6 @@ export default function CoursePage() {
       </Badge>
     )
   }
-
-  const navigate = useNavigate()
 
   return (
     <div className="text-xs">
@@ -113,8 +74,8 @@ export default function CoursePage() {
               <TableRow>
                 <TableHead className="text-xs">Course Name</TableHead>
                 <TableHead className="text-xs">Campus</TableHead>
-                <TableHead className="text-xs">Sector</TableHead>
-                <TableHead className="text-xs">Owner</TableHead>
+                {/* <TableHead className="text-xs">Sector</TableHead>
+                <TableHead className="text-xs">Owner</TableHead> */}
                 <TableHead className="text-xs">Added On</TableHead>
                 <TableHead className="text-xs">Status</TableHead>
                 <TableHead className="text-right text-xs">Action</TableHead>
@@ -122,51 +83,47 @@ export default function CoursePage() {
             </TableHeader>
             <TableBody>
               {courses.map((course) => (
-                <TableRow key={course.id}>
-                  <TableCell className="font-medium text-xs">{course.name}</TableCell>
+                <TableRow key={course._id || course.id}>
+                  <TableCell className="font-medium text-xs">{course.courseName}</TableCell>
                   <TableCell className="text-xs">{course.campus}</TableCell>
-                  <TableCell className="text-xs">{course.sector}</TableCell>
-                  <TableCell className="text-xs">{course.owner}</TableCell>
+                  {/* <TableCell className="text-xs">{course.sector}</TableCell>
+                  <TableCell className="text-xs">{course.owner}</TableCell> */}
                   <TableCell className="text-xs">
-                    {new Date(course.addedOn).toLocaleDateString(undefined, {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
+                    {moment(course.createdAt).format("MMM D, YYYY")}
                   </TableCell>
                   <TableCell className="text-xs">{getStatusBadge(course.status)}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-xs text-black"
-                            >
-                              <EllipsisVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            className="border-gray-200 bg-white text-black"
-                            align="end"
-                          >
-                            <DropdownMenuItem
-                              className="text-xs hover:bg-theme"
-                               onClick={() => navigate(`edit-course/${course.id}`)}
-                            >
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-xs hover:bg-theme"
-                               onClick={() => navigate(`${course.id}/modules`)}
-                            >
-                              Modules
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-xs hover:bg-theme text-red-600">
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-xs text-black"
+                        >
+                          <EllipsisVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        className="border-gray-200 bg-white text-black"
+                        align="end"
+                      >
+                        <DropdownMenuItem
+                          className="text-xs hover:bg-theme"
+                          onClick={() => navigate(`edit-course/${course._id || course.id}`)}
+                        >
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-xs hover:bg-theme"
+                          onClick={() => navigate(`${course._id || course.id}/modules`)}
+                        >
+                          Modules
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-xs hover:bg-theme text-red-600">
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}
