@@ -15,7 +15,7 @@ import axiosInstance from '../../lib/axios';
 import { BlinkingDots } from '@/components/shared/blinking-dots';
 import { Input } from '@/components/ui/input';
 import { DataTablePagination } from '@/components/shared/data-table-pagination';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function EmailConfigPage() {
   const [emailConfigs, setEmailConfigs] = useState<any>([]);
@@ -138,82 +138,93 @@ export default function EmailConfigPage() {
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">All Email Configurations</h1>
-        <Button
-          className="bg-theme text-white hover:bg-theme/90"
-          size={'sm'}
-          onClick={() => setDialogOpen(true)}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          New Email Configuration
-        </Button>
-      </div>
-      <div className="flex items-center space-x-4">
+  <Card className="bg-white">
+    {/* Header */}
+    <CardHeader className="flex flex-row items-center justify-between pb-6">
+      <CardTitle className="text-2xl font-semibold flex flex-row gap-4">
+        Email Configurations
+
+        <div className=" flex items-center space-x-4">
         <Input
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search by Email"
-          className='max-w-[400px] h-8'
+          className="h-8 min-w-[300px]"
         />
         <Button
           onClick={handleSearch}
           size="sm"
-          className="border-none bg-theme min-w-[100px] text-white hover:bg-theme/90"
+          className="min-w-[100px] border-none bg-theme text-white hover:bg-theme/90"
         >
           Search
         </Button>
       </div>
-      <Card className="rounded-md bg-white p-4 ">
-        {initialLoading ? (
-          <div className="flex justify-center py-6">
-            <BlinkingDots size="large" color="bg-theme" />
-          </div>
-        ) : emailConfigs.length === 0 ? (
-          <div className="flex justify-center py-6 text-gray-500">
-            No records found.
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Host</TableHead>
-                <TableHead>Port</TableHead>
-                <TableHead>Encryption</TableHead>
-                <TableHead>Authentication</TableHead>
+      </CardTitle>
+      <Button
+        className="bg-theme text-white hover:bg-theme/90"
+        size="sm"
+        onClick={() => setDialogOpen(true)}
+      >
+        <Plus className="mr-2 h-4 w-4" />
+        New Email Configuration
+      </Button>
+    </CardHeader>
 
-                <TableHead className="w-32 text-center">Actions</TableHead>
+    {/* Search Section */}
+    <CardContent className="p-4">
+      
+
+      {/* Table Section */}
+      {initialLoading ? (
+        <div className="flex justify-center py-6">
+          <BlinkingDots size="large" color="bg-theme" />
+        </div>
+      ) : emailConfigs.length === 0 ? (
+        <div className="flex justify-center py-6 text-gray-500">
+          No records found.
+        </div>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Email</TableHead>
+              <TableHead>Host</TableHead>
+              <TableHead>Port</TableHead>
+              <TableHead>Encryption</TableHead>
+              <TableHead>Authentication</TableHead>
+              <TableHead className="w-32 text-center">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {emailConfigs.map((config) => (
+              <TableRow key={config._id}>
+                <TableCell>{config.email}</TableCell>
+                <TableCell>{config.host}</TableCell>
+                <TableCell>{config.port}</TableCell>
+                <TableCell>{config.encryption}</TableCell>
+                <TableCell>
+                  {config.authentication ? 'True' : 'False'}
+                </TableCell>
+
+                <TableCell className="text-center">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="bg-theme text-white hover:bg-theme/90"
+                    onClick={() => handleEdit(config)}
+                  >
+                    <Pen className="h-4 w-4" />
+                  </Button>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {emailConfigs.map((config) => (
-                <TableRow key={config._id}>
-                  <TableCell>{config.email}</TableCell>
-                  <TableCell>{config.host}</TableCell>
-                  <TableCell>{config.port}</TableCell>
-                  <TableCell>{config.encryption}</TableCell>
-                  <TableCell>
-                    {config.authentication ? 'True' : 'False'}
-                  </TableCell>
+            ))}
+          </TableBody>
+        </Table>
+      )}
 
-                  <TableCell className="text-center">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="bg-theme text-white hover:bg-theme/90"
-                      onClick={() => handleEdit(config)}
-                    >
-                      <Pen className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
+      {/* Pagination */}
+      <div className="mt-4">
         <DataTablePagination
           pageSize={entriesPerPage}
           setPageSize={setEntriesPerPage}
@@ -221,16 +232,20 @@ export default function EmailConfigPage() {
           totalPages={totalPages}
           onPageChange={setCurrentPage}
         />
-      </Card>
-      <EmailConfigDialog
-        open={dialogOpen}
-        onOpenChange={(open) => {
-          setDialogOpen(open);
-          if (!open) setEditingEmailConfig(undefined);
-        }}
-        onSubmit={handleSubmit}
-        initialData={editingEmailConfig}
-      />
-    </div>
-  );
+      </div>
+    </CardContent>
+
+    {/* Add/Edit Dialog */}
+    <EmailConfigDialog
+      open={dialogOpen}
+      onOpenChange={(open) => {
+        setDialogOpen(open);
+        if (!open) setEditingEmailConfig(undefined);
+      }}
+      onSubmit={handleSubmit}
+      initialData={editingEmailConfig}
+    />
+  </Card>
+);
+
 }

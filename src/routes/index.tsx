@@ -37,6 +37,8 @@ import EmailConfigPage from '@/pages/emails';
 import { DraftsManager } from '@/pages/drafts';
 import CourseUnitPage from '@/pages/course/courseUnit';
 import CourseModule from '@/pages/course/courseUnit/courseResource';
+import TemplatePage from '@/pages/template';
+import SignaturePage from '@/pages/signature';
 
 
 const SignInPage = lazy(() => import('@/pages/auth/signin'));
@@ -172,8 +174,12 @@ export default function AppRouter() {
           element: <EmailConfigPage />
         },
         {
-          path: 'drafts',
-          element: <DraftsManager />
+          path: 'template',
+          element: <TemplatePage />
+        },
+        {
+          path: 'signature',
+          element: <SignaturePage />
         },
       ]
     }

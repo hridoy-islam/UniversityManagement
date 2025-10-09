@@ -253,7 +253,9 @@ const data = {
       icon: IconSettings,
       items: [
         { title: 'Email', url: 'emails' },
-        { title: 'Draft', url: 'drafts' },
+        { title: 'Template', url: 'template' },
+        { title: 'Signature', url: 'signature' },
+
       ]
     },
     { title: 'My Profile', url: '#', icon: IconUser }
