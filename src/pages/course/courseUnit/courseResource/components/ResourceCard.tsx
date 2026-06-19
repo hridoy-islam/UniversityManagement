@@ -28,7 +28,15 @@ import {
   File,
   X,
   CheckCircle,
-  Eye
+  Eye,
+  AlertCircle,
+  MessageSquare,
+  Download,
+  Upload,
+  MoreHorizontal,
+  ExternalLink,
+  Calendar,
+  ArrowRight
 } from 'lucide-react';
 import moment from 'moment';
 import { Resource } from './types';
@@ -47,9 +55,17 @@ import {
   DialogFooter,
   DialogClose
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Textarea } from '@/components/ui/textarea';
+import { BlinkingDots } from '@/components/shared/blinking-dots';
 
-// Define upload state type
 interface UploadState {
   selectedDocument: string | null;
   fileName: string | null;
@@ -60,711 +76,495 @@ interface ResourceCardProps {
   studentSubmission?: any;
   onEdit: (resource: Resource) => void;
   onDelete: (id: string) => void;
+  applicationId: any;
 }
 
 const ResourceCard: React.FC<ResourceCardProps> = ({
   resource,
   studentSubmission,
   onEdit,
-  onDelete
+  onDelete,
+  applicationId
 }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { id, unitId } = useParams();
   const user = useSelector((state: any) => state.auth.user);
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role === 'admin' || user?.role === 'teacher';
   const isStudent = user?.role === 'student';
 
-  // Dialog state for student submission
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [uploadState, setUploadState] = useState<UploadState>({
-    selectedDocument: null,
-    fileName: null
-  });
-  const [uploadingFile, setUploadingFile] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [applicationId, setApplicationId] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [localSubmission, setLocalSubmission] = useState(
-    studentSubmission || null
-  );
-
-  // 🔥 Delete confirmation dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const MAX_FILE_SIZE = 20 * 1024 * 1024; // 5MB
+  const getResourceTypeConfig = (type: string) => {
+    switch (type) {
+      case 'introduction':
+        return {
+          icon: <GraduationCap className="h-4 w-4" />,
+          color: 'bg-blue-50 text-blue-700 border-blue-200',
+          label: 'Introduction'
+        };
+      case 'study-guide':
+        return {
+          icon: <BookOpen className="h-4 w-4" />,
+          color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+          label: 'Study Guide'
+        };
+      case 'lecture':
+        return {
+          icon: <BookAIcon className="h-4 w-4" />,
+          color: 'bg-violet-50 text-violet-700 border-violet-200',
+          label: 'Lecture'
+        };
+      case 'assignment':
+        return {
+          icon: <FileText className="h-4 w-4" />,
+          color: 'bg-amber-50 text-amber-700 border-amber-200',
+          label: 'Assignment'
+        };
+      default:
+        return {
+          icon: <FileText className="h-4 w-4" />,
+          color: 'bg-slate-50 text-slate-700 border-slate-200',
+          label: 'Resource'
+        };
+    }
+  };
 
-  // Fetch applicationId when dialog opens (for student)
-  useEffect(() => {
-    if (dialogOpen && isStudent && user?._id && id) {
-      const fetchApplicationId = async () => {
+  // Delete confirmation component
+  const DeleteConfirmDialog = () => (
+    <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+            <Trash2 className="h-6 w-6 text-red-600" />
+          </div>
+          <DialogTitle className="text-center">Delete Resource</DialogTitle>
+          <DialogDescription className="text-center">
+            Are you sure you want to delete this resource? This action cannot be
+            undone and all associated data will be permanently removed.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="gap-3 sm:gap-0">
+          <DialogClose asChild>
+            <Button variant="outline" className="w-full sm:w-auto">
+              Cancel
+            </Button>
+          </DialogClose>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              onDelete(resource._id);
+              setDeleteDialogOpen(false);
+            }}
+            className="w-full sm:w-auto"
+          >
+            Delete Resource
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
+  // Assignment Card
+  if (resource.type === 'assignment') {
+    const [threadData, setThreadData] = useState<{
+      assignment: any;
+    } | null>(null);
+
+    useEffect(() => {
+      if (!isStudent || !user?._id || !id || !unitId) return;
+
+      const loadAssignment = async () => {
         try {
-          const res = await axiosInstance.get(
-            `/application-course?studentId=${user._id}&courseId=${id}`
+          const assignmentRes = await axiosInstance.get(
+            `/assignment?studentId=${user._id}&assignmentName=${encodeURIComponent(resource.title)}&unitId=${unitId}`
           );
-          const applications = res.data.data.result || [];
-          if (applications.length > 0) {
-            setApplicationId(applications[0]._id);
-          } else {
-            toast({
-              title: 'Error',
-              description: 'No active application found for this unit.',
-              variant: 'destructive'
-            });
-            setDialogOpen(false);
-          }
-        } catch (error) {
-          console.error('Failed to fetch application ID:', error);
+
+          const assignmentData = Array.isArray(assignmentRes.data.data.result)
+            ? assignmentRes.data.data.result[0]
+            : assignmentRes.data.data;
+
+          setThreadData({
+            assignment: assignmentData
+          });
+        } catch (err) {
+          console.error('Failed to load assignment', err);
           toast({
             title: 'Error',
-            description: 'Could not load your application. Please try again.',
+            description: 'Could not load assignment.',
             variant: 'destructive'
           });
-          setDialogOpen(false);
         }
       };
-      fetchApplicationId();
-    }
-  }, [dialogOpen, isStudent, user?._id, id, toast]);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+      loadAssignment();
+    }, [isStudent, user?._id, id, unitId]);
 
-    setUploadError(null);
-    setUploadingFile(true);
-    setUploadProgress(0);
+    const isOverdue = resource.deadline
+      ? moment(resource.deadline).isBefore(moment())
+      : false;
 
-    if (file.size > MAX_FILE_SIZE) {
-      toast({
-        title: 'File too large',
-        description: 'File must be less than 20MB.',
-        variant: 'destructive'
-      });
-      setUploadingFile(false);
-      return;
-    }
-
-    try {
-      const formData = new FormData();
-      formData.append('entityId', user?._id);
-      formData.append('file_type', 'resource');
-      formData.append('file', file);
-
-      const response = await axiosInstance.post('/documents', formData, {
-        onUploadProgress: (progressEvent) => {
-          if (progressEvent.total) {
-            const percentCompleted = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
-            setUploadProgress(percentCompleted);
-          }
-        }
-      });
-
-      if (
-        response.status === 200 &&
-        response.data?.success &&
-        response.data.data?.fileUrl
-      ) {
-        const fileUrl = response.data.data.fileUrl.trim();
-        setUploadState({
-          selectedDocument: fileUrl,
-          fileName: file.name
-        });
-        toast({
-          title: 'Success',
-          description: 'Document uploaded successfully!'
-        });
-      } else {
-        throw new Error('Upload failed: Invalid API response');
-      }
-    } catch (error) {
-      console.error('Upload error:', error);
-      setUploadError('Failed to upload document. Please try again.');
-      toast({
-        title: 'Upload failed',
-        description: 'Could not upload your document.',
-        variant: 'destructive'
-      });
-    } finally {
-      setUploadingFile(false);
-      setUploadProgress(0);
-    }
-  };
-
-  const handleSubmitAssignment = async () => {
-    if (!uploadState.selectedDocument) {
-      toast({
-        title: 'Error',
-        description: 'Please upload a document.',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    if (!applicationId || !unitId) {
-      toast({
-        title: 'Error',
-        description: 'Missing application or unit ID.',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-      const response = await axiosInstance.post('/assignment', {
-        applicationId,
-        studentId: user._id,
-        unitId,
-        assignmentName: resource.title,
-        document: uploadState.selectedDocument
-      });
-
-      toast({
-        title: 'Success',
-        description: 'Assignment submitted successfully!'
-      });
-
-      setLocalSubmission({
-        document: uploadState.selectedDocument,
-        createdAt: new Date().toISOString()
-      });
-
-      setUploadState({ selectedDocument: null, fileName: null });
-      setDialogOpen(false);
-    } catch (error) {
-      console.error('Failed to submit assignment:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to submit assignment. Please try again.',
-        variant: 'destructive'
-      });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const getResourceTypeIcon = (type: string) => {
-    switch (type) {
-      case 'introduction':
-        return <GraduationCap className="h-4 w-4" />;
-      case 'study-guide':
-        return <BookOpen className="h-4 w-4" />;
-      case 'lecture':
-        return <BookAIcon className="h-4 w-4" />;
-      case 'assignment':
-        return <FileText className="h-4 w-4" />;
-      default:
-        return <FileText className="h-4 w-4" />;
-    }
-  };
-
-  const getResourceTypeColor = (type: string) => {
-    switch (type) {
-      case 'introduction':
-        return 'bg-blue-500';
-      case 'study-guide':
-        return 'bg-green-500';
-      case 'lecture':
-        return 'bg-purple-500';
-      case 'assignment':
-        return 'bg-orange-500';
-      default:
-        return 'bg-gray-500';
-    }
-  };
-
-  const formatDeadline = (deadline: string | Date) => {
-    return moment(deadline).format('DD-MM-YYYY');
-  };
-
-  // === Render Assignment Card ===
-  if (resource.type === 'assignment') {
     return (
-      <div className="flex items-center justify-between rounded-lg border border-gray-300 p-4">
-        <div className="flex flex-1 items-center gap-3">
-          <Badge
-            className={`${getResourceTypeColor(resource.type)} p-2 text-white`}
-          >
-            {getResourceTypeIcon(resource.type)}
-          </Badge>
-          <h3 className="font-medium">{resource.title}</h3>
-          {resource.deadline && (
-            <div className="flex items-center text-sm text-slate-600">
-              <Clock className="ml-3 mr-1 h-4 w-4" />
-              <span>Due: {formatDeadline(resource.deadline)}</span>
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center gap-3">
-          {isAdmin && (
-            <div className="flex gap-2">
-              <Button
-                variant="default"
-                size="icon"
-                onClick={() => onEdit(resource)}
-                className="text-white hover:text-white/90"
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="destructive" size="icon">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Confirm Deletion</DialogTitle>
-                    <DialogDescription>
-                      Are you sure you want to delete this assignment? This action cannot be undone.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter>
-                    <DialogClose asChild>
-                      <Button variant="outline">Cancel</Button>
-                    </DialogClose>
-                    <Button
-                      variant="destructive"
-                      onClick={() => {
-                        onDelete(resource._id);
-                        setDeleteDialogOpen(false);
-                      }}
-                    >
-                      Delete
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
-          )}
-
-          {isStudent && (
-            <>
-              {localSubmission ? (
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center text-sm text-slate-600">
-                    <Clock className="ml-3 mr-1 h-4 w-4" />
-                    <span>
-                      Submitted: {formatDeadline(localSubmission.createdAt)}
-                    </span>
-                  </div>
-                  <Badge
-                    variant="secondary"
-                    className="bg-green-100 text-green-800 hover:bg-green-200"
-                  >
-                    <CheckCircle className="mr-1 h-3 w-3" />
-                    Submitted
-                  </Badge>
-                  <Button
-                    asChild
-                    variant="default"
-                    size="sm"
-                    className="h-8 px-2"
-                  >
-                    <a
-                      href={localSubmission.document}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 bg-theme text-white hover:bg-theme/90"
-                    >
-                      <Eye className="h-4 w-4" />
-                      View Document
-                    </a>
-                  </Button>
-                </div>
-              ) : (
-                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button
-                      size="sm"
-                      className="bg-theme text-white hover:bg-theme/90"
-                    >
-                      <Plus className="mr-2 h-4 w-4" /> Submit Assignment
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="z-[9999] max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Submit Assignment</DialogTitle>
-                      <DialogDescription>
-                        Upload your work for: <strong>{resource.title}</strong>
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="assignment-name">
-                          Assignment Title
-                        </Label>
-                        <Input
-                          id="assignment-name"
-                          value={resource.title}
-                          disabled
-                          className="bg-gray-100"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Document</Label>
-                        <input
-                          type="file"
-                          onChange={handleFileChange}
-                          className="hidden"
-                          ref={fileInputRef}
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="w-full bg-theme text-white hover:bg-theme/90"
-                          disabled={uploadingFile}
-                        >
-                          <FileText className="mr-2 h-4 w-4" />
-                          {uploadState.selectedDocument
-                            ? 'Change Document'
-                            : 'Upload Document'}
-                        </Button>
-
-                        {uploadState.selectedDocument && (
-                          <div className="flex items-center justify-between rounded-md bg-gray-100 p-3">
-                            <a
-                              href={uploadState.selectedDocument}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-2 truncate text-sm font-medium text-black hover:underline"
-                            >
-                              <File className="h-4 w-4" />
-                              {uploadState.fileName || 'Uploaded Document'}
-                            </a>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setUploadState({
-                                  selectedDocument: null,
-                                  fileName: null
-                                });
-                                if (fileInputRef.current)
-                                  fileInputRef.current.value = '';
-                              }}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        )}
-
-                        {uploadingFile && (
-                          <div className="text-center text-sm text-muted-foreground">
-                            Uploading... {uploadProgress}%
-                          </div>
-                        )}
-                        {uploadError && (
-                          <p className="text-sm text-red-600">{uploadError}</p>
-                        )}
-                      </div>
-
-                      <div className="flex justify-end gap-2 pt-2">
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setDialogOpen(false);
-                            setUploadState({
-                              selectedDocument: null,
-                              fileName: null
-                            });
-                            if (fileInputRef.current)
-                              fileInputRef.current.value = '';
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          onClick={handleSubmitAssignment}
-                          disabled={
-                            submitting || uploadingFile || !applicationId
-                          }
-                          className="bg-theme text-white hover:bg-theme/90"
-                        >
-                          {submitting ? 'Submitting...' : 'Submit'}
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // === Introduction Card ===
-  if (resource.type === 'introduction') {
-    return (
-      <Card className="shadow-lg">
-        <CardHeader>
-          <div className="flex items-center justify-between">
+      <>
+        <div className="group relative rounded-lg border border-slate-200 bg-white p-5 transition-all hover:border-slate-300 hover:shadow-sm">
+          <div className="mb-4 flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-blue-100 p-2">
-                <GraduationCap className="h-6 w-6 text-theme" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50">
+                <FileText className="h-4 w-4 text-amber-600" />
               </div>
-              <CardTitle>Introduction</CardTitle>
-            </div>
-            {isAdmin && (
-              <div className="flex gap-2">
-                <Button
-                  variant="default"
-                  size="icon"
-                  onClick={() => onEdit(resource)}
-                  className="text-white hover:text-white/90"
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="destructive" size="icon">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Confirm Deletion</DialogTitle>
-                      <DialogDescription>
-                        Are you sure you want to delete this introduction? This action cannot be undone.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                      <DialogClose asChild>
-                        <Button variant="outline">Cancel</Button>
-                      </DialogClose>
-                      <Button
-                        variant="destructive"
-                        onClick={() => {
-                          onDelete(resource._id);
-                          setDeleteDialogOpen(false);
-                        }}
+              <div>
+                <h3 className="font-medium text-slate-900">
+                  {resource.title}
+                </h3>
+                {resource.deadline && (
+                  <div className="mt-1 flex items-center gap-1.5 text-xs">
+                    <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                    <span
+                      className={
+                        isOverdue ? 'text-red-600 font-medium' : 'text-slate-500'
+                      }
+                    >
+                      Due {moment(resource.deadline).format('MMM D, YYYY')}
+                    </span>
+                    {isOverdue && (
+                      <Badge
+                        variant="outline"
+                        className="ml-2 border-red-200 bg-red-50 text-xs text-red-700"
                       >
-                        Delete
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                        Overdue
+                      </Badge>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Admin Actions */}
+            {isAdmin && (
+              <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onEdit(resource)}
+                  className="h-8 w-8 p-0"
+                >
+                  <Pencil className="h-4 w-4 text-slate-500" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setDeleteDialogOpen(true)}
+                  className="h-8 w-8 p-0 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4 text-slate-500 hover:text-red-600" />
+                </Button>
               </div>
             )}
           </div>
-        </CardHeader>
-        <CardContent>
-          <div
-            className="space-y-2 px-2 leading-relaxed text-slate-700 [&>ol]:list-decimal [&>ol]:pl-5 [&>ul]:list-disc [&>ul]:pl-5"
-            dangerouslySetInnerHTML={{ __html: resource.content || '' }}
-          />
-        </CardContent>
-      </Card>
+
+          {/* Student Action */}
+          {isStudent && applicationId && (
+            <Button
+              onClick={() =>
+                navigate(
+                  `/dashboard/student-applications/${applicationId}/assignment/${user._id}/unit-assignments/${unitId}`,
+                  { state: { assignmentId: threadData?.assignment?._id } }
+                )
+              }
+              variant="outline"
+              className="w-full justify-between border-slate-200 text-slate-700 hover:bg-slate-50"
+            >
+              <span>View Assignment Details</span>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        <DeleteConfirmDialog />
+      </>
     );
   }
 
-  // === Learning Outcome ===
+  // Introduction Card
+  if (resource.type === 'introduction') {
+    return (
+      <>
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
+                  <GraduationCap className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-semibold text-slate-900">
+                    Introduction
+                  </CardTitle>
+                  <CardDescription className="text-sm text-slate-500">
+                    Course overview and objectives
+                  </CardDescription>
+                </div>
+              </div>
+
+              {isAdmin && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onEdit(resource)}
+                    className="h-9 w-9 p-0"
+                  >
+                    <Pencil className="h-4 w-4 text-slate-500" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDeleteDialogOpen(true)}
+                    className="h-9 w-9 p-0 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4 text-slate-500 hover:text-red-600" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardHeader>
+
+          <CardContent>
+            <div className="prose prose-slate max-w-none">
+              <div
+                className="text-sm leading-relaxed text-slate-700 [&>ol]:list-decimal [&>ol]:pl-5 [&>ul]:list-disc [&>ul]:pl-5"
+                dangerouslySetInnerHTML={{ __html: resource.content || '' }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+        <DeleteConfirmDialog />
+      </>
+    );
+  }
+
+  // Learning Outcome
   if (resource.type === 'learning-outcome') {
     return (
-      <AccordionItem key={resource._id} value={resource._id}>
-        <AccordionTrigger className="px-4 py-2 hover:no-underline">
-          <div className="flex w-full items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Badge className="bg-indigo-500 p-2 text-white">
-                <Target className="h-4 w-4" />
-              </Badge>
-              <span className="font-medium">
-                {resource.learningOutcomes || ''}
-              </span>
+      <>
+        <AccordionItem
+          key={resource._id}
+          value={resource._id}
+          className="border-slate-200"
+        >
+          <AccordionTrigger className="px-4 py-4 hover:bg-slate-50 hover:no-underline">
+            <div className="flex w-full items-center justify-between gap-4">
+              <div className="flex flex-1 items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-indigo-50">
+                  <Target className="h-4 w-4 text-indigo-600" />
+                </div>
+                <div className="flex-1 text-left">
+                  <span className="text-sm font-medium text-slate-900">
+                    {resource.learningOutcomes || 'Learning Outcome'}
+                  </span>
+                  {isAdmin && (
+                    <div className="mt-1 flex gap-1.5">
+                      {resource?.finalFeedback && (
+                        <Badge
+                          variant="secondary"
+                          className="bg-slate-100 text-xs text-slate-600 hover:bg-slate-100"
+                        >
+                          Final Feedback
+                        </Badge>
+                      )}
+                      {resource?.observation && (
+                        <Badge
+                          variant="secondary"
+                          className="bg-slate-100 text-xs text-slate-600 hover:bg-slate-100"
+                        >
+                          Observation
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {isAdmin && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(resource);
+                    }}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Pencil className="h-4 w-4 text-slate-400" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteDialogOpen(true);
+                    }}
+                    className="h-8 w-8 p-0 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4 text-slate-400 hover:text-red-600" />
+                  </Button>
+                </div>
+              )}
             </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4 pt-2">
+            {resource.assessmentCriteria &&
+            resource.assessmentCriteria.length > 0 ? (
+              <div className="space-y-3">
+                {resource.assessmentCriteria.map((criteria, index) => (
+                  <div
+                    key={criteria._id}
+                    className="rounded-lg border border-slate-100 bg-slate-50/50 p-4"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-medium text-slate-600">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1 text-sm leading-relaxed text-slate-700">
+                        {criteria.description ? (
+                          <div
+                            className="[&>ol]:list-decimal [&>ol]:pl-5 [&>ul]:list-disc [&>ul]:pl-5"
+                            dangerouslySetInnerHTML={{
+                              __html: criteria.description
+                            }}
+                          />
+                        ) : (
+                          <span className="italic text-slate-400">
+                            No description available
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center">
+                <p className="text-sm text-slate-500">
+                  No assessment criteria defined yet
+                </p>
+              </div>
+            )}
+          </AccordionContent>
+        </AccordionItem>
+        <DeleteConfirmDialog />
+      </>
+    );
+  }
+
+  // Default: study-guide, lecture
+  const typeConfig = getResourceTypeConfig(resource.type);
+
+  return (
+    <>
+      <AccordionItem
+        key={resource._id}
+        value={resource._id}
+        className="border-slate-200"
+      >
+        <AccordionTrigger className="px-4 py-4 hover:bg-slate-50 hover:no-underline">
+          <div className="flex w-full items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div
+                className={`flex h-8 w-8 items-center justify-center rounded-md ${typeConfig.color}`}
+              >
+                {typeConfig.icon}
+              </div>
+              <div className="flex-1 text-left">
+                <span className="text-sm font-medium text-slate-900">
+                  {resource.title}
+                </span>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  {typeConfig.label}
+                </p>
+              </div>
+            </div>
+
             {isAdmin && (
-              <div className="flex gap-2">
+              <div className="flex items-center gap-1">
                 <Button
-                  variant="default"
-                  size="icon"
+                  variant="ghost"
+                  size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
                     onEdit(resource);
                   }}
-                  className="text-white hover:text-white/90"
+                  className="h-8 w-8 p-0"
                 >
-                  <Pencil className="h-4 w-4" />
+                  <Pencil className="h-4 w-4 text-slate-400" />
                 </Button>
-                <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="destructive" size="icon" onClick={(e) => e.stopPropagation()}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Confirm Deletion</DialogTitle>
-                      <DialogDescription>
-                        Are you sure you want to delete this learning outcome? This action cannot be undone.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                      <DialogClose asChild>
-                        <Button variant="outline">Cancel</Button>
-                      </DialogClose>
-                      <Button
-                        variant="destructive"
-                        onClick={() => {
-                          onDelete(resource._id);
-                          setDeleteDialogOpen(false);
-                        }}
-                      >
-                        Delete
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteDialogOpen(true);
+                  }}
+                  className="h-8 w-8 p-0 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4 text-slate-400 hover:text-red-600" />
+                </Button>
               </div>
             )}
           </div>
         </AccordionTrigger>
-        <AccordionContent className="px-4 pb-4 pt-4">
-          {resource.assessmentCriteria &&
-          resource.assessmentCriteria.length > 0 ? (
-            <div className="space-y-4">
-              {resource.assessmentCriteria.map((lo, index) => (
+        <AccordionContent className="px-4 pb-4 pt-2">
+          <div className="space-y-4">
+            {/* Rich text content */}
+            {resource.content?.trim() && (
+              <div className="rounded-lg border border-slate-100 bg-white p-4">
                 <div
-                  key={lo._id}
-                  className="rounded-md border border-slate-200 bg-slate-50 p-4"
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="mt-0.5 flex-shrink-0 font-medium text-slate-700">
-                      {index + 1}.
-                    </span>
-                    <div className="ql-snow flex-1 text-slate-800">
-                      {lo.description ? (
-                        <div
-                          className="space-y-2 px-2 leading-relaxed text-slate-700 [&>ol]:list-decimal [&>ol]:pl-5 [&>ul]:list-disc [&>ul]:pl-5"
-                          dangerouslySetInnerHTML={{ __html: lo.description }}
-                        />
-                      ) : (
-                        <span className="italic text-slate-500">
-                          No description
-                        </span>
-                      )}
-                    </div>
+                  className="prose prose-slate max-w-none text-sm leading-relaxed text-slate-700 [&>ol]:list-decimal [&>ol]:pl-5 [&>ul]:list-disc [&>ul]:pl-5"
+                  dangerouslySetInnerHTML={{ __html: resource.content }}
+                />
+              </div>
+            )}
+
+            {/* File attachment */}
+            {resource.fileUrl?.trim() && (
+              <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-white border border-slate-200">
+                    <File className="h-4 w-4 text-slate-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-700">
+                      {resource.fileName || 'Attached File'}
+                    </p>
+                    <p className="text-xs text-slate-500">Click to view</p>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p className="italic text-slate-500">
-              No assessment criteria defined.
-            </p>
-          )}
-        </AccordionContent>
-      </AccordionItem>
-    );
-  }
-
-  // === Default: study-guide, lecture ===
-  return (
-    <AccordionItem key={resource._id} value={resource._id}>
-      <AccordionTrigger className="py-2 hover:no-underline">
-        <div className="flex w-full items-center justify-between px-4">
-          <div className="flex items-center gap-3">
-            <Badge
-              className={`${getResourceTypeColor(resource.type)} p-2 text-white`}
-            >
-              {getResourceTypeIcon(resource.type)}
-            </Badge>
-            <span className="font-medium">{resource.title}</span>
-          </div>
-          {isAdmin && (
-            <div className="flex gap-2">
-              <Button
-                variant="default"
-                size="icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit(resource);
-                }}
-                className="text-white hover:text-white/90"
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Confirm Deletion</DialogTitle>
-                    <DialogDescription>
-                      Are you sure you want to delete this resource? This action cannot be undone.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter>
-                    <DialogClose asChild>
-                      <Button variant="outline">Cancel</Button>
-                    </DialogClose>
-                    <Button
-                      variant="destructive"
-                      onClick={() => {
-                        onDelete(resource._id);
-                        setDeleteDialogOpen(false);
-                      }}
-                    >
-                      Delete
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
-          )}
-        </div>
-      </AccordionTrigger>
-      <AccordionContent className="px-4 pt-4">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            {resource.content && resource.content.trim() ? (
-              <div
-                className="space-y-2 px-2 leading-relaxed text-slate-700 [&>ol]:list-decimal [&>ol]:pl-5 [&>ul]:list-disc [&>ul]:pl-5"
-                dangerouslySetInnerHTML={{ __html: resource.content }}
-              />
-            ) : resource.fileUrl && resource.fileUrl.trim() ? (
-              <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-4">
-                <Button
-                  asChild
-                  variant="link"
-                  className="p-0 font-medium text-blue-600 hover:underline"
-                >
+                <Button variant="ghost" size="sm" asChild>
                   <a
                     href={resource.fileUrl.trim()}
                     target="_blank"
                     rel="noopener noreferrer"
+                    className="flex items-center gap-1"
                   >
-                    {resource.fileName && resource.fileName.trim() !== ''
-                      ? resource.fileName
-                      : 'View Document'}
+                    <ExternalLink className="h-4 w-4" />
+                    <span className="hidden sm:inline">Open</span>
                   </a>
                 </Button>
               </div>
-            ) : (
-              <p className="px-4 italic text-slate-500">No content available</p>
+            )}
+
+            {/* Empty state */}
+            {!resource.content?.trim() && !resource.fileUrl?.trim() && (
+              <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center">
+                <File className="mx-auto h-8 w-8 text-slate-300" />
+                <p className="mt-2 text-sm text-slate-500">No content available</p>
+              </div>
             )}
           </div>
-        </div>
-      </AccordionContent>
-    </AccordionItem>
+        </AccordionContent>
+      </AccordionItem>
+      <DeleteConfirmDialog />
+    </>
   );
 };
 

@@ -27,18 +27,21 @@ import CampusPage from '@/pages/campus';
 import AddCampusPage from '@/pages/campus/add-campus';
 import EditCampusPage from '@/pages/campus/edit-campus';
 import StudentPage from '@/pages/student';
-import ApplicantPage from '@/pages/applicant';
-import ApplicantDetailsPage from '@/pages/applicant/applicant-details';
+import ApplicantPage from '@/pages/application';
+import ApplicantDetailsPage from '@/pages/application/applicant-details';
 import StudentViewPage from '@/pages/student/view-details';
-import CourseModulePage from '@/pages/course/module';
-import AddModulePage from '@/pages/course/module/add-module';
-import EditModulePage from '@/pages/course/module/edit-module';
 import EmailConfigPage from '@/pages/emails';
 import { DraftsManager } from '@/pages/drafts';
 import CourseUnitPage from '@/pages/course/courseUnit';
 import CourseModule from '@/pages/course/courseUnit/courseResource';
 import TemplatePage from '@/pages/template';
 import SignaturePage from '@/pages/signature';
+import CreateTemplatePage from '@/pages/template/createTemplate';
+import EditTemplatePage from '@/pages/template/editTemplate';
+import OfferAcceptedPage from '@/pages/offerAcceptedStudentlIst';
+import AwardingBodyPage from '@/pages/awarding-body';
+import CourseGroupPage from '@/pages/course/courseGroup';
+import CourseTermPage from '@/pages/course/courseTerm';
 
 
 const SignInPage = lazy(() => import('@/pages/auth/signin'));
@@ -89,13 +92,26 @@ export default function AppRouter() {
           element: <CourseUnitPage />
         },
         {
-          path: 'course/:id/modules/new',
-          element: <AddModulePage />
+          path: 'course/:id/groups',
+          element: <CourseGroupPage />
         },
         {
-          path: 'course/:id/modules/:unitId',
+          path: 'course/:id/groups/:gid/terms',
+          element: <CourseTermPage />
+        },
+        {
+          path: 'course/:id/groups/:gid/terms/:tid/units',
+          element: <CourseUnitPage />
+        },
+        {
+          path: 'course/:id/groups/:gid/terms/:tid/units/:unitId/modules',
           element: <CourseModule />
         },
+      
+        // {
+        //   path: 'course/:id/modules/:unitId',
+        //   element: <CourseModule />
+        // },
         {
           path: 'course/add-course',
           element: <AddCoursePage />
@@ -166,8 +182,12 @@ export default function AppRouter() {
           element: <ApplicantPage />
         },
         {
-          path: 'applicantions/applicant-details',
+          path: 'applicantions/:appId',
           element: <ApplicantDetailsPage />
+        },
+        {
+          path: 'offer-accepted',
+          element: <OfferAcceptedPage />
         },
         {
           path: 'emails',
@@ -178,8 +198,20 @@ export default function AppRouter() {
           element: <TemplatePage />
         },
         {
+          path: 'template/create',
+          element: <CreateTemplatePage />
+        },
+        {
+          path: 'template/:id',
+          element: <EditTemplatePage />
+        },
+        {
           path: 'signature',
           element: <SignaturePage />
+        },
+        {
+          path: 'awarding-body',
+          element: <AwardingBodyPage />
         },
       ]
     }

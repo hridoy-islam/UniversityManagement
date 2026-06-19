@@ -1,209 +1,221 @@
-import type React from "react"
-
+import React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { ArrowLeft, Calendar } from "lucide-react"
+import { ArrowLeft, Loader2 } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import axiosInstance from "@/lib/axios"
+import { useToast } from "@/components/ui/use-toast"
+import moment from "@/lib/moment-setup"
+import { useForm, Controller } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import DatePicker from "react-datepicker"
+import "react-datepicker/dist/react-datepicker.css"
+import { CalendarIcon, X } from "lucide-react"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
 
-import { Link, useNavigate } from "react-router-dom"
+// Zod validation schema - matches the Term model exactly
+const intakeFormSchema = z.object({
+  termName: z.string()
+    .min(1, "Intake name is required")
+    .min(3, "Intake name must be at least 3 characters")
+    .max(100, "Intake name must not exceed 100 characters")
+    .trim(),
+  validTillDate: z.date({
+    invalid_type_error: "Please select a valid date",
+  }).optional().nullable(),
+})
 
-// Mock data for campuses and their courses
-const campusData = {
-  "watney-college": {
-    name: "Watney College, Nelson Street",
-    courses: [
-      "Entry Level Certificate in ESOL International All Modes (Entry 3)",
-      "Focus Awards Level 3 Diploma in Business Administration",
-      "ESB Level 2 Certificate in ESOL Skills for Life",
-      "Level 2 Adult Social Care Certificate",
-      "Level 4 Diploma in Adult Care",
-    ],
-  },
-  "downtown-campus": {
-    name: "Downtown Campus",
-    courses: [
-      "ESB Level 2 Certificate in ESOL Skills for Life",
-      "Level 2 Adult Social Care Certificate",
-      "Level 4 Diploma in Adult Care",
-      "Certificate in Digital Marketing",
-      "Diploma in Project Management",
-    ],
-  },
-  "north-campus": {
-    name: "North Campus",
-    courses: [
-      "Entry Level Certificate in ESOL International All Modes (Entry 3)",
-      "Focus Awards Level 3 Diploma in Business Administration",
-      "Certificate in Healthcare Support",
-      "Diploma in Early Childhood Education",
-    ],
-  },
-}
+type IntakeFormValues = z.infer<typeof intakeFormSchema>
 
 export default function AddIntakePage() {
-const navigate = useNavigate()
-  const [formData, setFormData] = useState({
-    intakeName: "",
-    validTill: "",
-    campus: "",
-    selectedCourses: [] as string[],
+  const navigate = useNavigate()
+  const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
+
+  const form = useForm<IntakeFormValues>({
+    resolver: zodResolver(intakeFormSchema),
+    defaultValues: {
+      termName: "",
+      validTillDate: undefined,
+    },
   })
 
-  const handleCampusChange = (campus: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      campus,
-      selectedCourses: [], // Reset selected courses when campus changes
-    }))
+  const onSubmit = async (data: IntakeFormValues) => {
+    setLoading(true)
+    
+    try {
+      const payload: {
+        termName: string;
+        validTillDate?: string;
+      } = {
+        termName: data.termName,
+      }
+
+      // Only include validTillDate if it's provided
+      if (data.validTillDate) {
+        payload.validTillDate = new Date(
+          Date.UTC(
+            data.validTillDate.getFullYear(),
+            data.validTillDate.getMonth(),
+            data.validTillDate.getDate()
+          )
+        ).toISOString()
+      }
+
+      await axiosInstance.post("/terms", payload)
+      
+      toast({
+        title: "Success",
+        description: "Intake has been created successfully.",
+      })
+      navigate(-1)
+    } catch (error) {
+      console.error("Failed to create intake:", error)
+      toast({
+        title: "Error",
+        description: "Failed to create intake. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleCourseToggle = (course: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      selectedCourses: prev.selectedCourses.includes(course)
-        ? prev.selectedCourses.filter((c) => c !== course)
-        : [...prev.selectedCourses, course],
-    }))
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Here you would typically save the data to your backend
-    console.log("Intake data:", formData)
-    navigate(-1)
-  }
-
-  const selectedCampusData = formData.campus ? campusData[formData.campus as keyof typeof campusData] : null
+  // Custom input component for react-datepicker
+  const CustomDatePickerInput = React.forwardRef<
+    HTMLButtonElement,
+    { value?: string; onClick?: () => void; onClear?: () => void }
+  >(({ value, onClick, onClear }, ref) => (
+    <div className="relative w-full">
+      <button
+        type="button"
+        onClick={onClick}
+        ref={ref}
+        className="flex h-8 w-full items-center rounded-md border border-gray-300 px-3 py-2 text-xs ring-offset-background  focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={loading}
+      >
+        <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+        {value || <span className="text-gray-400">Pick a date</span>}
+      </button>
+      
+    </div>
+  ))
+  CustomDatePickerInput.displayName = "CustomDatePickerInput"
 
   return (
-   <div className="">
-  <Card>
-    <CardHeader>
-      <div className="flex items-center gap-4">
-        <div onClick={()=> navigate(-1)}>
-          <Button variant="outline" size="sm" className="text-xs bg-theme text-white hover:bg-theme/90">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </div>
-        <div>
-          {/* Keep title large */}
-          <CardTitle className="text-2xl font-bold">Add New Intake</CardTitle>
-          <CardDescription className="text-xs mt-1">
-            Create a new intake with course selections and campus assignment
-          </CardDescription>
-        </div>
-      </div>
-    </CardHeader>
-
-    <CardContent>
-      {/* Apply text-xs to the entire form except overridden elements */}
-      <form onSubmit={handleSubmit} className="space-y-6 text-xs">
-        
-        {/* --- Grid Section --- */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Intake Name */}
-          <div className="space-y-1">
-            <Label htmlFor="intakeName" className="text-xs font-medium">
-              Intake Name
-            </Label>
-            <Input
-              id="intakeName"
-              placeholder="Enter intake name"
-              value={formData.intakeName}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, intakeName: e.target.value }))
-              }
-              required
-              className="text-xs h-8"
-            />
-          </div>
-
-          {/* Available Till */}
-          <div className="space-y-1">
-            <Label htmlFor="validTill" className="text-xs font-medium">
-              Available till date
-            </Label>
-            <div className="relative">
-              <Input
-                id="validTill"
-                type="date"
-                value={formData.validTill}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, validTill: e.target.value }))
-                }
-                required
-                className="text-xs h-8 pl-3 pr-8"
-              />
-              <Calendar className="absolute right-3 top-2.5 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+    <div className="">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-4">
+            <div onClick={() => navigate(-1)}>
+              <Button variant="outline" size="sm" className="text-xs bg-theme text-white hover:bg-theme/90">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </div>
+            <div>
+              <CardTitle className="text-2xl font-bold">Add New Intake</CardTitle>
+              <CardDescription className="text-xs mt-1">
+                Create a new intake term
+              </CardDescription>
             </div>
           </div>
+        </CardHeader>
 
-          {/* Campus */}
-          <div className="space-y-1">
-            <Label htmlFor="campus" className="text-xs font-medium">
-              Campus
-            </Label>
-            <Select onValueChange={handleCampusChange} required>
-              <SelectTrigger className="text-xs h-8">
-                <SelectValue placeholder="Select campus" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(campusData).map(([key, campus]) => (
-                  <SelectItem key={key} value={key} className="text-xs">
-                    {campus.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 text-xs">
+              {/* --- Grid Section --- */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Intake Name */}
+                <FormField
+                  control={form.control}
+                  name="termName"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs font-medium">
+                        Intake Name <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter intake name (e.g., Spring 2024)"
+                          {...field}
+                          className="text-xs h-8"
+                          disabled={loading}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
+                />
 
-        {/* --- Course Selection Section --- */}
-        {selectedCampusData && (
-          <div className="space-y-3">
-            <Label className="text-xs font-medium">Select Courses</Label>
-            <Card className="p-3 ">
-              <div className="mb-2">
-                <h4 className="font-medium text-xs text-primary">
-                  {selectedCampusData.name}
-                </h4>
+                {/* Available Till - React DatePicker (Optional) */}
+                <FormField
+                  control={form.control}
+                  name="validTillDate"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs font-medium">
+                        Valid till date 
+                      </FormLabel>
+                      <FormControl>
+                        <DatePicker
+                          selected={field.value}
+                          onChange={(date) => field.onChange(date)}
+                          dateFormat="dd/MM/yyyy"
+                          minDate={new Date()}
+                          placeholderText="Pick a date"
+                          isClearable
+                          showMonthDropdown
+                          showYearDropdown
+                          dropdownMode="select"
+                          customInput={
+                            <CustomDatePickerInput />
+                          }
+                          wrapperClassName="w-full"
+                          className="w-full"
+                          disabled={loading}
+                        />
+                      </FormControl>
+                     
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
+                />
               </div>
-              <div className="space-y-2">
-                {selectedCampusData.courses.map((course) => (
-                  <div key={course} className="flex items-start space-x-2">
-                    <Checkbox
-                      id={course}
-                      checked={formData.selectedCourses.includes(course)}
-                      onCheckedChange={() => handleCourseToggle(course)}
-                      className="mt-0.5"
-                    />
-                    <Label
-                      htmlFor={course}
-                      className="text-xs leading-4 cursor-pointer"
-                    >
-                      {course}
-                    </Label>
-                  </div>
-                ))}
+
+
+
+              <div className="flex justify-end pt-4">
+                <Button 
+                  type="submit" 
+                  className="text-xs h-8 px-6 bg-theme text-white hover:bg-theme/90"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    "Create Intake"
+                  )}
+                </Button>
               </div>
-            </Card>
-          </div>
-        )}
-
-        {/* --- Submit Button --- */}
-        <div className="flex justify-end pt-4">
-          <Button type="submit" className="text-xs h-8 px-6 text-xs bg-theme text-white hover:bg-theme/90">
-            Create Intake
-          </Button>
-        </div>
-      </form>
-    </CardContent>
-  </Card>
-</div>
-
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

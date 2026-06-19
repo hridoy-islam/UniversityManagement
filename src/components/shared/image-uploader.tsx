@@ -79,13 +79,16 @@ export function ImageUploader({
 
       const formData = new FormData();
       formData.append('entityId', entityId);
-      formData.append('file_type', 'profile');
+      formData.append('file_type', 'userProfile');
       formData.append('file', file);
 
       const response = await axiosInstance.post(
         '/documents',
         formData,
         {
+           headers: {
+    "Content-Type": "multipart/form-data",
+  },
           onUploadProgress: (progressEvent) => {
             const percentCompleted = Math.round(
               (progressEvent.loaded * 100) / progressEvent.total

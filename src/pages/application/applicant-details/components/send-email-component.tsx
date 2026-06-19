@@ -20,7 +20,7 @@ export function SendEmailComponent({ student}) {
       const logId = logResponse.data?.data?._id; 
 
       
-      await axiosInstance.post(`/email-send`, emailData);
+      await axiosInstance.post(`/email`, emailData);
 
       if (logId) {
         await axiosInstance.patch(`/email-logs/${logId}`, { status: "sent" });

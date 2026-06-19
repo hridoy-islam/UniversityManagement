@@ -1,210 +1,300 @@
-import React, { useEffect } from 'react';
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft } from 'lucide-react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
 import Select from 'react-select';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import axiosInstance from '@/lib/axios';
+import { toast } from 'sonner';
+import { z } from 'zod';
+import { Textarea } from '@/components/ui/textarea';
+import { BlinkingDots } from '@/components/shared/blinking-dots';
 
-// Mock data: Universities → Campuses
-const universityData = {
-  'university-of-manchester': {
-    name: 'University of Manchester',
-    campuses: {
-      'main-campus': { name: 'Main Campus', location: 'Manchester, UK' },
-      'east-campus': { name: 'East Campus', location: 'Greater Manchester' }
-    }
-  },
-  'london-school-of-economics': {
-    name: 'London School of Economics',
-    campuses: {
-      'london-central': { name: 'Central Campus', location: 'London, UK' },
-      'north-campus': { name: 'North Campus', location: 'Hampstead, London' }
-    }
-  },
-  'university-of-birmingham': {
-    name: 'University of Birmingham',
-    campuses: {
-      'edgbaston': { name: 'Edgbaston Campus', location: 'Birmingham, UK' },
-      'city-center': { name: 'City Center Hub', location: 'Birmingham City' }
-    }
-  }
-};
+// Zod validation schema matching your required fields
+const courseSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Course name is required")
+    .max(100, "Course name must be less than 100 characters")
+    .trim(),
+  courseCode: z
+    .string()
+    .min(1, "Course code is required")
+    .max(20, "Course code must be less than 20 characters")
+    .trim(),
+  intakeId: z
+    .string()
+    .min(1, "Intake / Term is required"),
+  awardingBodyId: z
+    .string()
+    .min(1, "Awarding body is required"),
+  description: z
+    .string()
+    .max(500, "Description must be less than 500 characters")
+    .optional()
+    .or(z.literal("")),
+});
 
-// Mock API: Fetch existing course by ID
-const fetchCourseById = (id: string) => {
-  // Simulate API delay
-  return {
-    id,
-    university: 'university-of-manchester',
-    campus: 'main-campus',
-    courseName: 'Advanced Data Science & Machine Learning',
-    courseDescription:
-      '<p>This course covers advanced topics in data science, including deep learning, NLP, and big data processing.</p>',
-    learningOutcomes:
-      '<ul><li>Build and train deep neural networks</li><li>Process and analyze large datasets</li><li>Deploy ML models in production</li></ul>',
-    coverImage: '/mock-images/course-cover.jpg', // Simulated existing image
-    coverPdf: '/mock-pdfs/syllabus.pdf',
-    coverVideoUrl: 'https://www.youtube.com/watch?v=abc123xyz'
-  };
-};
+type CourseFormData = z.infer<typeof courseSchema>;
+
+interface IntakeType {
+  _id: string;
+  termName: string;
+  status: number;
+}
+
+interface AwardingBodyType {
+  _id: string;
+  name: string;
+  status: unknown;
+}
+
+interface FormErrors {
+  name?: string;
+  courseCode?: string;
+  description?: string;
+  intakeId?: string;
+  awardingBodyId?: string;
+}
 
 export default function EditCoursePage() {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>(); // Get course ID from URL
 
-  const [formData, setFormData] = useState({
-    university: '',
-    campus: '',
-    courseName: '',
-    courseDescription: '',
-    learningOutcomes: '',
-    coverImage: null as File | null,
-    coverPdf: null as File | null,
-    coverVideoUrl: ''
+  const [formData, setFormData] = useState<CourseFormData>({
+    name: '',
+    courseCode: '',
+    description: '',
+    intakeId: '',
+    awardingBodyId: '',
   });
 
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [pdfPreview, setPdfPreview] = useState<string | null>(null);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [intakes, setIntakes] = useState<IntakeType[]>([]);
+  const [awardingBodies, setAwardingBodies] = useState<AwardingBodyType[]>([]);
+  
+  const [loadingCourse, setLoadingCourse] = useState(true);
+  const [loadingIntakes, setLoadingIntakes] = useState(true);
+  const [loadingAwardingBodies, setLoadingAwardingBodies] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
+  // Fetch Dropdown Metadata Options
   useEffect(() => {
-    if (!id) {
-      setError('Course ID is missing');
-      return;
+    const fetchIntakes = async () => {
+      try {
+        const res = await axiosInstance.get("/terms", { 
+          params: { page: 1, limit: 'all' } 
+        });
+        const data = res.data.data.result;
+        const activeIntakes = data.filter((intake: IntakeType) => intake.status === 1);
+        setIntakes(activeIntakes);
+      } catch (error) {
+        console.error("Failed to fetch intakes:", error);
+        toast.error("Failed to load intakes");
+      } finally {
+        setLoadingIntakes(false);
+      }
+    };
+
+    const fetchAwardingBodies = async () => {
+      try {
+        const res = await axiosInstance.get("/awarding-body", { 
+          params: { page: 1, limit: 'all' } 
+        });
+        const data = res.data.data.result;
+        setAwardingBodies(data);
+      } catch (error) {
+        console.error("Failed to fetch awarding bodies:", error);
+        toast.error("Failed to load awarding bodies");
+      } finally {
+        setLoadingAwardingBodies(false);
+      }
+    };
+
+    fetchIntakes();
+    fetchAwardingBodies();
+  }, []);
+
+  // Fetch Existing Course Configuration Details
+  useEffect(() => {
+    const fetchCourseDetails = async () => {
+      if (!id) return;
+      try {
+        const res = await axiosInstance.get(`/courses/${id}`);
+        const course = res.data.data; 
+        
+        setFormData({
+          name: course.name || '',
+          courseCode: course.courseCode || '',
+          description: course.description || '',
+          // Extract the object IDs if the response populates the sub-documents
+          intakeId: typeof course.intakeId === 'object' ? course.intakeId?._id : course.intakeId || '',
+          awardingBodyId: typeof course.awardingBodyId === 'object' ? course.awardingBodyId?._id : course.awardingBodyId || '',
+        });
+      } catch (error) {
+        console.error("Failed to load course details:", error);
+        toast.error("Failed to load course data");
+        navigate(-1);
+      } finally {
+        setLoadingCourse(false);
+      }
+    };
+
+    if (id) {
+      fetchCourseDetails();
     }
+  }, [id, navigate]);
 
-    // Simulate fetching course data
-    const courseData = fetchCourseById(id);
-
-    setFormData({
-      university: courseData.university,
-      campus: courseData.campus,
-      courseName: courseData.courseName,
-      courseDescription: courseData.courseDescription,
-      learningOutcomes: courseData.learningOutcomes,
-      coverImage: null,
-      coverPdf: null,
-      coverVideoUrl: courseData.coverVideoUrl || ''
-    });
-
-    // Set previews for existing files (simulated URLs)
-    setImagePreview(courseData.coverImage);
-    setPdfPreview(courseData.coverPdf);
-  }, [id]);
-
-  // Derived data
-  const selectedUniversity = formData.university
-    ? universityData[formData.university as keyof typeof universityData]
-    : null;
-
-  const campusOptions = selectedUniversity
-    ? Object.entries(selectedUniversity.campuses).map(([key, campus]) => ({
-        value: key,
-        label: `${campus.name} — ${campus.location}`
-      }))
-    : [];
-
-  // Handlers
-  const handleUniversityChange = (selected: { value: string; label: string } | null) => {
-    setFormData((prev) => ({
-      ...prev,
-      university: selected?.value || '',
-      campus: '' // Reset campus
-    }));
-    setImagePreview(null);
-    setPdfPreview(null);
+  const validateField = (field: keyof CourseFormData, value: string) => {
+    try {
+      const fieldSchema = z.object({
+        [field]: courseSchema.shape[field]
+      });
+      fieldSchema.parse({ [field]: value });
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+    } catch (error: any) {
+      if (error.errors?.[0]) {
+        setErrors(prev => ({ ...prev, [field]: error.errors[0].message }));
+      }
+    }
   };
 
-  const handleCampusChange = (selected: { value: string; label: string } | null) => {
-    setFormData((prev) => ({
-      ...prev,
-      campus: selected?.value || ''
-    }));
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'pdf') => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (type === 'image' && file.type.startsWith('image/')) {
-      setFormData((prev) => ({ ...prev, coverImage: file }));
-      setImagePreview(URL.createObjectURL(file)); // New preview
-    }
-
-    if (type === 'pdf' && file.type === 'application/pdf') {
-      setFormData((prev) => ({ ...prev, coverPdf: file }));
-      setPdfPreview(URL.createObjectURL(file));
+  const handleInputChange = (field: keyof CourseFormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field as keyof FormErrors]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleInputBlur = (field: keyof CourseFormData) => {
+    validateField(field, formData[field]);
+  };
+
+  const handleIntakeChange = (selected: { value: string; label: string } | null) => {
+    const value = selected?.value || '';
+    setFormData(prev => ({ ...prev, intakeId: value }));
+    validateField('intakeId', value);
+  };
+
+  const handleAwardingBodyChange = (selected: { value: string; label: string } | null) => {
+    const value = selected?.value || '';
+    setFormData(prev => ({ ...prev, awardingBodyId: value }));
+    validateField('awardingBodyId', value);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
-
-    if (!formData.courseName || !formData.university || !formData.campus) {
-      setError('Please fill all required fields.');
-      setIsSubmitting(false);
+    
+    const validationResult = courseSchema.safeParse(formData);
+    
+    if (!validationResult.success) {
+      const fieldErrors: FormErrors = {};
+      validationResult.error.errors.forEach((error) => {
+        const field = error.path[0] as keyof FormErrors;
+        fieldErrors[field] = error.message;
+      });
+      setErrors(fieldErrors);
+      
+      toast.error("Please fix the form errors before submitting");
       return;
     }
 
-    // Prepare FormData for submission
-    const payload = new FormData();
-    payload.append('university', formData.university);
-    payload.append('campus', formData.campus);
-    payload.append('courseName', formData.courseName);
-    payload.append('courseDescription', formData.courseDescription);
-    payload.append('learningOutcomes', formData.learningOutcomes);
-    payload.append('coverVideoUrl', formData.coverVideoUrl);
+    setSubmitting(true);
 
-    if (formData.coverImage) payload.append('coverImage', formData.coverImage);
-    if (formData.coverPdf) payload.append('coverPdf', formData.coverPdf);
+    const payload = {
+      name: validationResult.data.name,
+      courseCode: validationResult.data.courseCode,
+      description: validationResult.data.description || null,
+      intakeId: validationResult.data.intakeId,
+      awardingBodyId: validationResult.data.awardingBodyId,
+    };
 
-    console.log(`Updating course with ID: ${id}`, Object.fromEntries(payload.entries()));
-
-    // Simulate API update
-    setTimeout(() => {
-      setIsSubmitting(false);
-      alert('Course updated successfully!');
-      navigate(-1); // Go back to previous page
-    }, 800);
+    try {
+      await axiosInstance.patch(`/courses/${id}`, payload);
+      toast.success('Course updated successfully!');
+      navigate(-1);
+    } catch (error: any) {
+      console.error('Error updating course:', error);
+      toast.error(error.response?.data?.message || 'Failed to update course');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  // React Select Styles
-  const selectStyles = {
-    control: (base: any) => ({
-      ...base,
-      minHeight: '32px',
-      height: '32px'
-    }),
-    valueContainer: (base: any) => ({
-      ...base,
+  const getSelectStyles = (hasError: boolean) => ({
+    control: (base: any) => ({ 
+      ...base, 
+      minHeight: '32px', 
       height: '32px',
-      padding: '0 8px'
+      fontSize: '12px',
+      borderColor: hasError ? '#ef4444' : base.borderColor,
+      '&:hover': {
+        borderColor: hasError ? '#ef4444' : base.borderColor,
+      }
     }),
-    indicatorsContainer: (base: any) => ({
-      ...base,
-      height: '32px'
+    valueContainer: (base: any) => ({ 
+      ...base, 
+      height: '32px', 
+      padding: '0 8px' 
     }),
-    singleValue: (base: any) => ({
+    indicatorsContainer: (base: any) => ({ 
+      ...base, 
+      height: '32px' 
+    }),
+    singleValue: (base: any) => ({ 
+      ...base, 
+      fontSize: '12px' 
+    }),
+    input: (base: any) => ({
       ...base,
       fontSize: '12px'
     }),
-    menu: (base: any) => ({
+    menu: (base: any) => ({ 
+      ...base, 
+      fontSize: '12px' 
+    }),
+    option: (base: any) => ({
       ...base,
       fontSize: '12px'
-    })
-  };
+    }),
+    placeholder: (base: any) => ({
+      ...base,
+      fontSize: '12px'
+    }),
+  });
+
+  const intakeOptions = intakes.map(intake => ({
+    value: intake._id,
+    label: intake.termName,
+  }));
+
+  const awardingBodyOptions = awardingBodies.map(body => ({
+    value: body._id,
+    label: body.name,
+  }));
+
+  // Match existing form selections with dropdown target options
+  const selectedIntake = intakeOptions.find(opt => opt.value === formData.intakeId) || null;
+  const selectedAwardingBody = awardingBodyOptions.find(opt => opt.value === formData.awardingBodyId) || null;
+
+  if (loadingCourse) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <BlinkingDots />
+      </div>
+    );
+  }
 
   return (
-    <div className="">
+    <div>
       <Card>
         <CardHeader>
           <div className="flex items-center gap-4">
@@ -218,132 +308,124 @@ export default function EditCoursePage() {
             </Button>
             <div>
               <CardTitle className="text-2xl font-bold">Edit Course</CardTitle>
-              <CardDescription className="text-xs mt-1">
-                Update the details for this course
+              <CardDescription className="mt-1 text-xs">
+                Modify details for the selected course
               </CardDescription>
             </div>
           </div>
         </CardHeader>
 
         <CardContent>
-          {error && (
-            <div className="mb-4 rounded bg-red-50 p-3 text-xs text-red-600">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6 text-xs">
-            {/* University & Campus */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form onSubmit={handleSubmit} className="space-y-6 text-xs" noValidate>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="space-y-1">
-                <Label htmlFor="university" className="text-xs font-medium">
-                  University
-                </Label>
-                <Select
-                  id="university"
-                  options={Object.entries(universityData).map(([key, uni]) => ({
-                    value: key,
-                    label: uni.name
-                  }))}
-                  value={
-                    formData.university
-                      ? {
-                          value: formData.university,
-                          label:
-                            universityData[formData.university as keyof typeof universityData]?.name
-                        }
-                      : null
-                  }
-                  onChange={handleUniversityChange}
-                  placeholder="Select university..."
-                  styles={selectStyles}
-                  isClearable
-                />
-              </div>
-
-              <div className="space-y-1">
-                <Label htmlFor="campus" className="text-xs font-medium">
-                  Campus
-                </Label>
-                <Select
-                  id="campus"
-                  options={campusOptions}
-                  value={
-                    formData.campus && selectedUniversity
-                      ? {
-                          value: formData.campus,
-                          label: selectedUniversity.campuses[formData.campus]?.name
-                        }
-                      : null
-                  }
-                  onChange={handleCampusChange}
-                  placeholder={selectedUniversity ? 'Select campus...' : 'Select university first'}
-                  styles={selectStyles}
-                  isDisabled={!selectedUniversity}
-                  isClearable
-                />
-              </div>
-            </div>
-
-            {/* Course Name */}
-            <div className="space-y-1">
-              <Label htmlFor="courseName" className="text-xs font-medium">
-                Course Name
-              </Label>
-              <Input
-                id="courseName"
-                placeholder="Enter course name"
-                value={formData.courseName}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, courseName: e.target.value }))
-                }
-                required
-                className="h-8"
-              />
-            </div>
-
-
-            {/* Image, PDF, Video */}
-            <div className="flex flex-row items-center gap-4 justify-between flex-wrap">
-           
-
-              {/* Cover PDF */}
-              <div className="space-y-1 w-full sm:w-auto">
-                <Label htmlFor="coverPdf" className="text-xs font-medium">
-                  Syllabus PDF
+                <Label htmlFor="name" className="text-xs font-medium">
+                  Course Name <span className="text-red-500">*</span>
                 </Label>
                 <Input
-                  id="coverPdf"
-                  type="file"
-                  accept="application/pdf"
-                  onChange={(e) => handleFileChange(e, 'pdf')}
-                  className="h-8"
+                  id="name"
+                  placeholder="Enter course name"
+                  value={formData.name}
+                  onChange={e => handleInputChange('name', e.target.value)}
+                  onBlur={() => handleInputBlur('name')}
+                  className={`h-8 text-xs ${errors.name ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                 />
-                {/* {pdfPreview && (
-                  <div className="mt-2">
-                    <a
-                      href={pdfPreview}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-blue-600 hover:underline"
-                    >
-                      View uploaded PDF
-                    </a>
-                  </div>
-                )} */}
+                {errors.name && (
+                  <p className="text-red-500 text-[10px] mt-1">{errors.name}</p>
+                )}
               </div>
 
-             
+              <div className="space-y-1">
+                <Label htmlFor="courseCode" className="text-xs font-medium">
+                  Course Code <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="courseCode"
+                  placeholder="Enter course code"
+                  value={formData.courseCode}
+                  onChange={e => handleInputChange('courseCode', e.target.value)}
+                  onBlur={() => handleInputBlur('courseCode')}
+                  className={`h-8 text-xs ${errors.courseCode ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                />
+                {errors.courseCode && (
+                  <p className="text-red-500 text-[10px] mt-1">{errors.courseCode}</p>
+                )}
+              </div>
             </div>
 
-            {/* Submit Button */}
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="space-y-1">
+                <Label htmlFor="intake" className="text-xs font-medium">
+                  Intake / Term <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  options={intakeOptions}
+                  value={selectedIntake}
+                  onChange={handleIntakeChange}
+                  placeholder={loadingIntakes ? "Loading intakes..." : "Select intake..."}
+                  styles={getSelectStyles(!!errors.intakeId)}
+                  isClearable
+                  isDisabled={loadingIntakes}
+                  isLoading={loadingIntakes}
+                  noOptionsMessage={() => "No intakes found"}
+                />
+                {errors.intakeId && (
+                  <p className="text-red-500 text-[10px] mt-1">{errors.intakeId}</p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="awardingBody" className="text-xs font-medium">
+                  Awarding Body <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  options={awardingBodyOptions}
+                  value={selectedAwardingBody}
+                  onChange={handleAwardingBodyChange}
+                  placeholder={loadingAwardingBodies ? "Loading awarding bodies..." : "Select awarding body..."}
+                  styles={getSelectStyles(!!errors.awardingBodyId)}
+                  isClearable
+                  isDisabled={loadingAwardingBodies}
+                  isLoading={loadingAwardingBodies}
+                  noOptionsMessage={() => "No awarding bodies found"}
+                />
+                {errors.awardingBodyId && (
+                  <p className="text-red-500 text-[10px] mt-1">{errors.awardingBodyId}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="description" className="text-xs font-medium">
+                Description
+              </Label>
+              <Textarea
+                id="description"
+                placeholder="Enter course description"
+                value={formData.description}
+                onChange={e => handleInputChange('description', e.target.value)}
+                onBlur={() => handleInputBlur('description')}
+                className={`text-xs ${errors.description ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+              />
+              {errors.description && (
+                <p className="text-red-500 text-[10px] mt-1">{errors.description}</p>
+              )}
+            </div>
+
             <div className="flex justify-end pt-6">
               <Button
                 type="submit"
-                className="h-8 px-6 bg-theme text-white hover:bg-theme/90"
-                disabled={isSubmitting || !formData.courseName || !formData.university || !formData.campus}
+                className="h-8 bg-theme px-6 text-white hover:bg-theme/90 text-xs"
+                disabled={submitting}
               >
-                {isSubmitting ? 'Updating...' : 'Update Course'}
+                {submitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
               </Button>
             </div>
           </form>

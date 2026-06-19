@@ -1,131 +1,50 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useForm, Controller } from 'react-hook-form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import ReactSelect from 'react-select';
+import { countries, nationalities } from '@/types';
 
-// Mock data for dropdowns
+// Options data
 const mockData = {
   titles: ['Mr', 'Mrs', 'Miss', 'Ms', 'Dr', 'Prof'],
   maritalStatuses: ['Single', 'Married', 'Divorced', 'Widowed', 'Separated'],
   gender: ['Male', 'Female', 'Other', 'Prefer not to say'],
-  ethnicities: [
-    'White British',
-    'White Irish',
-    'White Other',
-    'Mixed White and Black Caribbean',
-    'Mixed White and Black African',
-    'Mixed White and Asian',
-    'Mixed Other',
-    'Asian or Asian British Indian',
-    'Asian or Asian British Pakistani',
-    'Asian or Asian British Bangladeshi',
-    'Asian or Asian British Other',
-    'Black or Black British Caribbean',
-    'Black or Black British African',
-    'Black or Black British Other',
-    'Chinese',
-    'Other Ethnic Group',
-    'Prefer not to say'
-  ],
-  sexualOrientation: [
-    'Heterosexual',
-    'Gay',
-    'Lesbian',
-    'Bisexual',
-    'Other',
-    'Prefer not to say'
-  ],
-  religion: [
-    'No religion',
-    'Christian',
-    'Buddhist',
-    'Hindu',
-    'Jewish',
-    'Muslim',
-    'Sikh',
-    'Other',
-    'Prefer not to say'
-  ],
-  employmentTypes: [
-    'Full-Time',
-    'Part-Time',
-    'Contract',
-    'Freelance',
-    'Unemployed'
-  ],
-  fundingTypes: [
-    'Self-funded',
-    'Sponsored',
-    'Scholarship',
-    'Government Grant',
-    'Other'
-  ]
+  employmentTypes: ['Full-Time', 'Part-Time', 'Contract', 'Freelance', 'Unemployed'],
 };
 
-const countries = [
-  'Afghanistan',
-  'Albania',
-  'Algeria',
-  'Argentina',
-  'Australia',
-  'Austria',
-  'Bangladesh',
-  'Belgium',
-  'Brazil',
-  'Canada',
-  'China',
-  'Denmark',
-  'Egypt',
-  'France',
-  'Germany',
-  'India',
-  'Indonesia',
-  'Italy',
-  'Japan',
-  'Malaysia',
-  'Netherlands',
-  'Pakistan',
-  'Singapore',
-  'Spain',
-  'Sweden',
-  'Switzerland',
-  'Thailand',
-  'Turkey',
-  'United Kingdom',
-  'United States'
-];
-
 const languages = [
-  'English',
-  'Spanish',
-  'French',
-  'German',
-  'Italian',
-  'Portuguese',
-  'Arabic',
-  'Chinese (Mandarin)',
-  'Japanese',
-  'Korean',
-  'Hindi',
-  'Bengali',
-  'Urdu',
-  'Russian',
-  'Dutch',
-  'Swedish',
-  'Other'
+  'English', 'Spanish', 'French', 'German', 'Italian', 'Portuguese',
+  'Arabic', 'Chinese (Mandarin)', 'Japanese', 'Korean', 'Hindi',
+  'Bengali', 'Urdu', 'Russian', 'Dutch', 'Swedish', 'Other'
+];
+ const fundingOptions = [
+    { value: 'Self', label: 'Self' },
+    // { value: 'Student Loan', label: 'Student Loan' },
+    { value: 'Employer', label: 'Employer' },
+    {
+      value: 'SLC',
+      label: 'SLC'
+    }
+  ];
+// Convert arrays to react-select options
+const titleOptions = mockData.titles.map(item => ({ value: item, label: item }));
+const maritalStatusOptions = mockData.maritalStatuses.map(item => ({ value: item.toLowerCase(), label: item }));
+const genderOptions = mockData.gender.map(item => ({ value: item.toLowerCase(), label: item }));
+const employmentTypeOptions = mockData.employmentTypes.map(item => ({ value: item, label: item }));
+const languageOptions = languages.map(item => ({ value: item, label: item }));
+const countryOptions = countries.map(country => ({ value: country, label: country }));
+const nationalityOptions = nationalities.map(nationality => ({ value: nationality, label: nationality }));
+
+// Yes/No options
+const yesNoOptions = [
+  { value: 'yes', label: 'Yes' },
+  { value: 'no', label: 'No' }
 ];
 
 interface PersonalDetailsFormProps {
@@ -133,16 +52,12 @@ interface PersonalDetailsFormProps {
   onSave: (data: any) => void;
 }
 
-export function PersonalDetailsForm({
-  student,
-  onSave
-}: PersonalDetailsFormProps) {
+export function PersonalDetailsForm({ student, onSave }: PersonalDetailsFormProps) {
   const {
     handleSubmit,
     register,
     control,
     reset,
-    setValue,
     watch,
     formState: { errors }
   } = useForm({
@@ -158,7 +73,7 @@ export function PersonalDetailsForm({
       maritalStatus: '',
       nationality: '',
       countryOfBirth: '',
-      countryOfDomicile: '',
+      countryOfResidence: '',
       nativeLanguage: '',
       passportName: '',
       passportIssueLocation: '',
@@ -166,7 +81,6 @@ export function PersonalDetailsForm({
       passportIssueDate: null,
       passportExpiryDate: null,
       collegeRoll: '',
-      // Address fields
       postalAddressLine1: '',
       postalAddressLine2: '',
       postalCity: '',
@@ -178,24 +92,26 @@ export function PersonalDetailsForm({
       residentialCountry: '',
       residentialPostCode: '',
       sameAsResidential: false,
-      // Emergency contact
       emergencyFullName: '',
       emergencyContactNumber: '',
       emergencyEmail: '',
       emergencyRelationship: '',
       emergencyAddress: '',
-      // Additional fields
       disability: '',
       disabilityDetails: '',
-      // Employment
+      ethnicity: '',
+      genderIdentity: '',
+      sexualOrientation: '',
+      religion: '',
       isEmployed: '',
-      currentEmployer: '',
-      currentJobTitle: '',
-      employmentType: '',
-      employmentStartDate: null,
-      responsibilities: '',
+      currentEmployment: {
+        employer: '',
+        jobTitle: '',
+        startDate: null,
+        employmentType: ''
+      },
       hasPreviousEmployment: '',
-      // Education & Visa
+      previousEmployments: [],
       completedUKCourse: '',
       visaRequired: '',
       visaRefusal: '',
@@ -208,8 +124,17 @@ export function PersonalDetailsForm({
     }
   });
 
-  const [staffOptions, setStaffOptions] = useState<any>([]);
+  // Add useFieldArray for previous employments
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'previousEmployments'
+  });
+
   const watchSameAsResidential = watch('sameAsResidential');
+  const watchIsEmployed = watch('isEmployed');
+  const watchDisability = watch('disability');
+  const watchVisaRefusal = watch('visaRefusal');
+  const watchHasPreviousEmployment = watch('hasPreviousEmployment');
 
   useEffect(() => {
     if (student) {
@@ -225,17 +150,13 @@ export function PersonalDetailsForm({
         maritalStatus: student.maritalStatus || '',
         nationality: student.nationality || '',
         countryOfBirth: student.countryOfBirth || '',
-        countryOfDomicile: student.countryOfDomicile || '',
+        countryOfResidence: student.countryOfResidence || '',
         nativeLanguage: student.nativeLanguage || '',
         passportName: student.passportName || '',
         passportIssueLocation: student.passportIssueLocation || '',
         passportNumber: student.passportNumber || '',
-        passportIssueDate: student.passportIssueDate
-          ? new Date(student.passportIssueDate)
-          : null,
-        passportExpiryDate: student.passportExpiryDate
-          ? new Date(student.passportExpiryDate)
-          : null,
+        passportIssueDate: student.passportIssueDate ? new Date(student.passportIssueDate) : null,
+        passportExpiryDate: student.passportExpiryDate ? new Date(student.passportExpiryDate) : null,
         collegeRoll: student.collegeRoll || '',
         postalAddressLine1: student.postalAddressLine1 || '',
         postalAddressLine2: student.postalAddressLine2 || '',
@@ -260,14 +181,20 @@ export function PersonalDetailsForm({
         sexualOrientation: student.sexualOrientation || '',
         religion: student.religion || '',
         isEmployed: student.isEmployed || '',
-        currentEmployer: student.currentEmployment?.employer || '',
-        currentJobTitle: student.currentEmployment?.jobTitle || '',
-        employmentType: student.currentEmployment?.employmentType || '',
-        employmentStartDate: student.currentEmployment?.startDate
-          ? new Date(student.currentEmployment.startDate)
-          : null,
-        responsibilities: student.currentEmployment?.responsibilities || '',
+        currentEmployment: {
+          employer: student.currentEmployment?.employer || '',
+          jobTitle: student.currentEmployment?.jobTitle || '',
+          startDate: student.currentEmployment?.startDate ? new Date(student.currentEmployment.startDate) : null,
+          employmentType: student.currentEmployment?.employmentType || ''
+        },
         hasPreviousEmployment: student.hasPreviousEmployment || '',
+        previousEmployments: student.previousEmployments?.map((emp: any) => ({
+          employer: emp.employer || '',
+          jobTitle: emp.jobTitle || '',
+          startDate: emp.startDate ? new Date(emp.startDate) : null,
+          endDate: emp.endDate ? new Date(emp.endDate) : null,
+          employmentType: emp.employmentType || ''
+        })) || [],
         completedUKCourse: student.completedUKCourse || '',
         visaRequired: student.visaRequired || '',
         visaRefusal: student.visaRefusal || '',
@@ -285,24 +212,29 @@ export function PersonalDetailsForm({
     onSave(data);
   };
 
-  // Country options for react-select
-  const countryOptions = countries.map((country) => ({
-    value: country,
-    label: country
-  }));
-
-  // Language options for react-select
-  const languageOptions = languages.map((language) => ({
-    value: language,
-    label: language
-  }));
-
-  // Reusable styles for react-select to apply xs font
+  // Reusable styles for react-select
   const selectStyles = {
-    control: (base: any) => ({
+    control: (base: any, state: any) => ({
       ...base,
       minHeight: '32px',
-      fontSize: '0.75rem'
+      height: '32px',
+      fontSize: '0.75rem',
+      borderColor: state.isFocused ? 'hsl(var(--ring))' : '#d1d5db',
+      boxShadow: state.isFocused ? '0 0 0 2px hsl(var(--ring))' : 'none',
+      '&:hover': {
+        borderColor: state.isFocused ? 'hsl(var(--ring))' : 'hsl(var(--input))'
+      }
+    }),
+    valueContainer: (base: any) => ({
+      ...base,
+      padding: '0 8px',
+      height: '30px'
+    }),
+    input: (base: any) => ({
+      ...base,
+      fontSize: '0.75rem',
+      margin: 0,
+      padding: 0
     }),
     option: (base: any) => ({
       ...base,
@@ -315,7 +247,8 @@ export function PersonalDetailsForm({
     }),
     menu: (base: any) => ({
       ...base,
-      fontSize: '0.75rem'
+      fontSize: '0.75rem',
+      zIndex: 50
     }),
     placeholder: (base: any) => ({
       ...base,
@@ -324,7 +257,7 @@ export function PersonalDetailsForm({
   };
 
   return (
-    <div className="text-xs space-y-6"> {/* 🔹 All text now xs */}
+    <div className="text-xs space-y-6">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Personal Information */}
         <Card>
@@ -341,18 +274,15 @@ export function PersonalDetailsForm({
                   control={control}
                   rules={{ required: 'Title is required' }}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Please select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mockData.titles.map((title, index) => (
-                          <SelectItem key={index} value={title} className="text-xs">
-                            {title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <ReactSelect
+                      {...field}
+                      options={titleOptions}
+                      value={titleOptions.find(option => option.value === field.value)}
+                      onChange={(option) => field.onChange(option?.value || '')}
+                      placeholder="Please select"
+                      isSearchable
+                      styles={selectStyles}
+                    />
                   )}
                 />
                 {errors.title && (
@@ -366,9 +296,7 @@ export function PersonalDetailsForm({
                 <Input
                   id="firstName"
                   className="h-8 text-xs"
-                  {...register('firstName', {
-                    required: 'First Name is required'
-                  })}
+                  {...register('firstName', { required: 'First Name is required' })}
                 />
                 {errors.firstName && (
                   <p className="text-xs text-red-500">{errors.firstName.message}</p>
@@ -381,9 +309,7 @@ export function PersonalDetailsForm({
                 <Input
                   id="lastName"
                   className="h-8 text-xs"
-                  {...register('lastName', {
-                    required: 'Last Name is required'
-                  })}
+                  {...register('lastName', { required: 'Last Name is required' })}
                 />
                 {errors.lastName && (
                   <p className="text-xs text-red-500">{errors.lastName.message}</p>
@@ -466,18 +392,15 @@ export function PersonalDetailsForm({
                   control={control}
                   rules={{ required: 'Gender is required' }}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Please select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mockData.gender.map((gender, index) => (
-                          <SelectItem key={index} value={gender.toLowerCase()} className="text-xs">
-                            {gender}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <ReactSelect
+                      {...field}
+                      options={genderOptions}
+                      value={genderOptions.find(option => option.value === field.value)}
+                      onChange={(option) => field.onChange(option?.value || '')}
+                      placeholder="Please select"
+                      isSearchable
+                      styles={selectStyles}
+                    />
                   )}
                 />
                 {errors.gender && (
@@ -493,18 +416,15 @@ export function PersonalDetailsForm({
                   control={control}
                   rules={{ required: 'Marital Status is required' }}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Please select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mockData.maritalStatuses.map((status, index) => (
-                          <SelectItem key={index} value={status.toLowerCase()} className="text-xs">
-                            {status}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <ReactSelect
+                      {...field}
+                      options={maritalStatusOptions}
+                      value={maritalStatusOptions.find(option => option.value === field.value)}
+                      onChange={(option) => field.onChange(option?.value || '')}
+                      placeholder="Please select"
+                      isSearchable
+                      styles={selectStyles}
+                    />
                   )}
                 />
                 {errors.maritalStatus && (
@@ -521,10 +441,9 @@ export function PersonalDetailsForm({
                   rules={{ required: 'Nationality is required' }}
                   render={({ field }) => (
                     <ReactSelect
-                      options={countryOptions}
-                      value={countryOptions.find(
-                        (option) => option.value === field.value
-                      )}
+                      {...field}
+                      options={nationalityOptions}
+                      value={nationalityOptions.find(option => option.value === field.value)}
                       onChange={(option) => field.onChange(option?.value || '')}
                       placeholder="Please select"
                       isSearchable
@@ -546,10 +465,9 @@ export function PersonalDetailsForm({
                   rules={{ required: 'Country of Birth is required' }}
                   render={({ field }) => (
                     <ReactSelect
+                      {...field}
                       options={countryOptions}
-                      value={countryOptions.find(
-                        (option) => option.value === field.value
-                      )}
+                      value={countryOptions.find(option => option.value === field.value)}
                       onChange={(option) => field.onChange(option?.value || '')}
                       placeholder="Please select"
                       isSearchable
@@ -564,17 +482,16 @@ export function PersonalDetailsForm({
 
               {/* Country of Domicile */}
               <div className="space-y-1">
-                <Label htmlFor="countryOfDomicile" className="text-xs">Country of Domicile *</Label>
+                <Label htmlFor="countryOfResidence" className="text-xs">Country of Domicile *</Label>
                 <Controller
-                  name="countryOfDomicile"
+                  name="countryOfResidence"
                   control={control}
                   rules={{ required: 'Country of Domicile is required' }}
                   render={({ field }) => (
                     <ReactSelect
+                      {...field}
                       options={countryOptions}
-                      value={countryOptions.find(
-                        (option) => option.value === field.value
-                      )}
+                      value={countryOptions.find(option => option.value === field.value)}
                       onChange={(option) => field.onChange(option?.value || '')}
                       placeholder="Please select"
                       isSearchable
@@ -582,24 +499,23 @@ export function PersonalDetailsForm({
                     />
                   )}
                 />
-                {errors.countryOfDomicile && (
-                  <p className="text-xs text-red-500">{errors.countryOfDomicile.message}</p>
+                {errors.countryOfResidence && (
+                  <p className="text-xs text-red-500">{errors.countryOfResidence.message}</p>
                 )}
               </div>
 
               {/* Native Language */}
               <div className="space-y-1">
-                <Label htmlFor="nativeLanguage" className="text-xs">Native Language *</Label>
+                <Label htmlFor="nativeLanguage" className="text-xs">Native Language </Label>
                 <Controller
                   name="nativeLanguage"
                   control={control}
-                  rules={{ required: 'Native Language is required' }}
+                  // rules={{ required: 'Native Language is required' }}
                   render={({ field }) => (
                     <ReactSelect
+                      {...field}
                       options={languageOptions}
-                      value={languageOptions.find(
-                        (option) => option.value === field.value
-                      )}
+                      value={languageOptions.find(option => option.value === field.value)}
                       onChange={(option) => field.onChange(option?.value || '')}
                       placeholder="Please select"
                       isSearchable
@@ -631,9 +547,7 @@ export function PersonalDetailsForm({
                     <Input
                       id="postalAddressLine1"
                       className="h-8 text-xs"
-                      {...register('postalAddressLine1', {
-                        required: 'Address Line 1 is required'
-                      })}
+                      {...register('postalAddressLine1', { required: 'Address Line 1 is required' })}
                     />
                     {errors.postalAddressLine1 && (
                       <p className="text-xs text-red-500">{errors.postalAddressLine1.message}</p>
@@ -641,20 +555,14 @@ export function PersonalDetailsForm({
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="postalAddressLine2" className="text-xs">Address Line 2</Label>
-                    <Input
-                      id="postalAddressLine2"
-                      className="h-8 text-xs"
-                      {...register('postalAddressLine2')}
-                    />
+                    <Input id="postalAddressLine2" className="h-8 text-xs" {...register('postalAddressLine2')} />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="postalCity" className="text-xs">City *</Label>
                     <Input
                       id="postalCity"
                       className="h-8 text-xs"
-                      {...register('postalCity', {
-                        required: 'City is required'
-                      })}
+                      {...register('postalCity', { required: 'City is required' })}
                     />
                     {errors.postalCity && (
                       <p className="text-xs text-red-500">{errors.postalCity.message}</p>
@@ -668,10 +576,9 @@ export function PersonalDetailsForm({
                       rules={{ required: 'Country is required' }}
                       render={({ field }) => (
                         <ReactSelect
+                          {...field}
                           options={countryOptions}
-                          value={countryOptions.find(
-                            (option) => option.value === field.value
-                          )}
+                          value={countryOptions.find(option => option.value === field.value)}
                           onChange={(option) => field.onChange(option?.value || '')}
                           placeholder="Please select"
                           isSearchable
@@ -688,9 +595,7 @@ export function PersonalDetailsForm({
                     <Input
                       id="postalPostCode"
                       className="h-8 text-xs"
-                      {...register('postalPostCode', {
-                        required: 'Post Code is required'
-                      })}
+                      {...register('postalPostCode', { required: 'Post Code is required' })}
                     />
                     {errors.postalPostCode && (
                       <p className="text-xs text-red-500">{errors.postalPostCode.message}</p>
@@ -732,11 +637,7 @@ export function PersonalDetailsForm({
                     </div>
                     <div className="space-y-1">
                       <Label htmlFor="residentialAddressLine2" className="text-xs">Address Line 2</Label>
-                      <Input
-                        id="residentialAddressLine2"
-                        className="h-8 text-xs"
-                        {...register('residentialAddressLine2')}
-                      />
+                      <Input id="residentialAddressLine2" className="h-8 text-xs" {...register('residentialAddressLine2')} />
                     </div>
                     <div className="space-y-1">
                       <Label htmlFor="residentialCity" className="text-xs">City *</Label>
@@ -761,10 +662,9 @@ export function PersonalDetailsForm({
                         }}
                         render={({ field }) => (
                           <ReactSelect
+                            {...field}
                             options={countryOptions}
-                            value={countryOptions.find(
-                              (option) => option.value === field.value
-                            )}
+                            value={countryOptions.find(option => option.value === field.value)}
                             onChange={(option) => field.onChange(option?.value || '')}
                             placeholder="Please select"
                             isSearchable
@@ -808,9 +708,7 @@ export function PersonalDetailsForm({
                 <Input
                   id="emergencyFullName"
                   className="h-8 text-xs"
-                  {...register('emergencyFullName', {
-                    required: 'Emergency contact name is required'
-                  })}
+                  {...register('emergencyFullName', { required: 'Emergency contact name is required' })}
                 />
                 {errors.emergencyFullName && (
                   <p className="text-xs text-red-500">{errors.emergencyFullName.message}</p>
@@ -822,9 +720,7 @@ export function PersonalDetailsForm({
                   id="emergencyContactNumber"
                   type="tel"
                   className="h-8 text-xs"
-                  {...register('emergencyContactNumber', {
-                    required: 'Emergency contact number is required'
-                  })}
+                  {...register('emergencyContactNumber', { required: 'Emergency contact number is required' })}
                 />
                 {errors.emergencyContactNumber && (
                   <p className="text-xs text-red-500">{errors.emergencyContactNumber.message}</p>
@@ -832,21 +728,14 @@ export function PersonalDetailsForm({
               </div>
               <div className="space-y-1">
                 <Label htmlFor="emergencyEmail" className="text-xs">Email</Label>
-                <Input
-                  id="emergencyEmail"
-                  type="email"
-                  className="h-8 text-xs"
-                  {...register('emergencyEmail')}
-                />
+                <Input id="emergencyEmail" type="email" className="h-8 text-xs" {...register('emergencyEmail')} />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="emergencyRelationship" className="text-xs">Relationship *</Label>
                 <Input
                   id="emergencyRelationship"
                   className="h-8 text-xs"
-                  {...register('emergencyRelationship', {
-                    required: 'Relationship is required'
-                  })}
+                  {...register('emergencyRelationship', { required: 'Relationship is required' })}
                 />
                 {errors.emergencyRelationship && (
                   <p className="text-xs text-red-500">{errors.emergencyRelationship.message}</p>
@@ -854,11 +743,7 @@ export function PersonalDetailsForm({
               </div>
               <div className="space-y-1 md:col-span-2">
                 <Label htmlFor="emergencyAddress" className="text-xs">Address</Label>
-                <Textarea
-                  id="emergencyAddress"
-                  className="text-xs"
-                  {...register('emergencyAddress')}
-                />
+                <Textarea id="emergencyAddress" className="text-xs" {...register('emergencyAddress')} />
               </div>
             </div>
           </CardContent>
@@ -870,23 +755,25 @@ export function PersonalDetailsForm({
             <CardTitle className="text-sm">Employment Information</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="space-y-4">
+              {/* Currently Employed Question */}
               <div className="space-y-1">
-                <Label htmlFor="isEmployed" className="text-xs">Are you currently employed? *</Label>
+                <Label htmlFor="isEmployed" className="text-xs">
+                  Are you currently employed? *
+                </Label>
                 <Controller
                   name="isEmployed"
                   control={control}
                   rules={{ required: 'Employment status is required' }}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Please select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="yes" className="text-xs">Yes</SelectItem>
-                        <SelectItem value="no" className="text-xs">No</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <ReactSelect
+                      {...field}
+                      options={yesNoOptions}
+                      value={yesNoOptions.find(option => option.value === field.value)}
+                      onChange={(option) => field.onChange(option?.value || '')}
+                      placeholder="Please select"
+                      styles={selectStyles}
+                    />
                   )}
                 />
                 {errors.isEmployed && (
@@ -894,97 +781,305 @@ export function PersonalDetailsForm({
                 )}
               </div>
 
-              {watch('isEmployed') === 'yes' && (
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                  <div className="space-y-1">
-                    <Label htmlFor="currentEmployer" className="text-xs">Current Employer</Label>
-                    <Input
-                      id="currentEmployer"
-                      className="h-8 text-xs"
-                      {...register('currentEmployer')}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="currentJobTitle" className="text-xs">Job Title</Label>
-                    <Input
-                      id="currentJobTitle"
-                      className="h-8 text-xs"
-                      {...register('currentJobTitle')}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="employmentType" className="text-xs">Employment Type</Label>
-                    <Controller
-                      name="employmentType"
-                      control={control}
-                      render={({ field }) => (
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <SelectTrigger className="h-8 text-xs">
-                            <SelectValue placeholder="Please select" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {mockData.employmentTypes.map((type, index) => (
-                              <SelectItem key={index} value={type} className="text-xs">
-                                {type}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+              {/* Current Employment Details */}
+              {watchIsEmployed === 'yes' && (
+                <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+                  <h3 className="font-medium text-xs">Current Employment Details</h3>
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="currentEmployment.employer" className="text-xs">
+                        Employer Name *
+                      </Label>
+                      <Input
+                        id="currentEmployment.employer"
+                        className="h-8 text-xs"
+                        {...register('currentEmployment.employer', {
+                          required: watchIsEmployed === 'yes' ? 'Employer name is required' : false
+                        })}
+                      />
+                      {errors.currentEmployment?.employer && (
+                        <p className="text-xs text-red-500">{errors.currentEmployment.employer.message}</p>
                       )}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="employmentStartDate" className="text-xs">Start Date</Label>
-                    <Controller
-                      name="employmentStartDate"
-                      control={control}
-                      render={({ field }) => (
-                        <DatePicker
-                          selected={field.value}
-                          onChange={(date) => field.onChange(date)}
-                          dateFormat="dd/MM/yyyy"
-                          className="w-full h-8 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs focus:outline-none"
-                          placeholderText="DD/MM/YYYY"
-                          showYearDropdown
-                          showMonthDropdown
-                          scrollableYearDropdown
-                          wrapperClassName="w-full"
-                          yearDropdownItemNumber={20}
-                          maxDate={new Date()}
-                        />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="currentEmployment.jobTitle" className="text-xs">
+                        Job Position *
+                      </Label>
+                      <Input
+                        id="currentEmployment.jobTitle"
+                        className="h-8 text-xs"
+                        {...register('currentEmployment.jobTitle', {
+                          required: watchIsEmployed === 'yes' ? 'Job title is required' : false
+                        })}
+                      />
+                      {errors.currentEmployment?.jobTitle && (
+                        <p className="text-xs text-red-500">{errors.currentEmployment.jobTitle.message}</p>
                       )}
-                    />
-                  </div>
-                  <div className="space-y-1 md:col-span-2">
-                    <Label htmlFor="responsibilities" className="text-xs">Job Responsibilities</Label>
-                    <Textarea
-                      id="responsibilities"
-                      className="text-xs"
-                      {...register('responsibilities')}
-                      rows={4}
-                    />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="currentEmployment.startDate" className="text-xs">
+                        Start Date *
+                      </Label>
+                      <Controller
+                        name="currentEmployment.startDate"
+                        control={control}
+                        rules={{
+                          required: watchIsEmployed === 'yes' ? 'Start date is required' : false
+                        }}
+                        render={({ field }) => (
+                          <DatePicker
+                            selected={field.value}
+                            onChange={(date) => field.onChange(date)}
+                            dateFormat="dd/MM/yyyy"
+                            className="w-full h-8 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs focus:outline-none focus:ring"
+                            placeholderText="DD/MM/YYYY"
+                            showYearDropdown
+                            showMonthDropdown
+                            scrollableYearDropdown
+                            wrapperClassName="w-full"
+                            yearDropdownItemNumber={20}
+                            maxDate={new Date()}
+                          />
+                        )}
+                      />
+                      {errors.currentEmployment?.startDate && (
+                        <p className="text-xs text-red-500">{errors.currentEmployment.startDate.message}</p>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="currentEmployment.employmentType" className="text-xs">
+                        Employment Type *
+                      </Label>
+                      <Controller
+                        name="currentEmployment.employmentType"
+                        control={control}
+                        rules={{
+                          required: watchIsEmployed === 'yes' ? 'Employment type is required' : false
+                        }}
+                        render={({ field }) => (
+                          <ReactSelect
+                            {...field}
+                            options={employmentTypeOptions}
+                            value={employmentTypeOptions.find(option => option.value === field.value)}
+                            onChange={(option) => field.onChange(option?.value || '')}
+                            placeholder="Please select"
+                            styles={selectStyles}
+                          />
+                        )}
+                      />
+                      {errors.currentEmployment?.employmentType && (
+                        <p className="text-xs text-red-500">{errors.currentEmployment.employmentType.message}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
 
+              {/* Previous Employment Question */}
               <div className="space-y-1">
-                <Label htmlFor="hasPreviousEmployment" className="text-xs">Do you have previous employment experience?</Label>
+                <Label htmlFor="hasPreviousEmployment" className="text-xs">
+                  Do you have previous employment history? *
+                </Label>
                 <Controller
                   name="hasPreviousEmployment"
                   control={control}
+                  rules={{ required: 'Previous employment status is required' }}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Please select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="yes" className="text-xs">Yes</SelectItem>
-                        <SelectItem value="no" className="text-xs">No</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <ReactSelect
+                      {...field}
+                      options={yesNoOptions}
+                      value={yesNoOptions.find(option => option.value === field.value)}
+                      onChange={(option) => field.onChange(option?.value || '')}
+                      placeholder="Please select"
+                      styles={selectStyles}
+                    />
                   )}
                 />
+                <p className="text-xs text-gray-400">
+                  List any previous jobs you've held. Include job title, employer, dates, and responsibilities.
+                </p>
+                {errors.hasPreviousEmployment && (
+                  <p className="text-xs text-red-500">{errors.hasPreviousEmployment.message}</p>
+                )}
               </div>
+
+              {/* Previous Employment Details */}
+              {watchHasPreviousEmployment === 'yes' && (
+                <div className="space-y-4">
+                  <h3 className="font-medium text-xs">Previous Employment</h3>
+
+                  {fields.map((fieldItem, index) => (
+                    <div
+                      key={fieldItem.id}
+                      className="border border-gray-200 rounded-lg p-4 space-y-3"
+                    >
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-xs font-medium">Employment #{index + 1}</h4>
+                        {fields.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => remove(index)}
+                            className="text-red-500 hover:text-red-700 text-xs"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                        {/* Employer Name */}
+                        <div className="space-y-1">
+                          <Label htmlFor={`previousEmployments.${index}.employer`} className="text-xs">
+                            Employer Name *
+                          </Label>
+                          <Input
+                            id={`previousEmployments.${index}.employer`}
+                            className="h-8 text-xs"
+                            {...register(`previousEmployments.${index}.employer`, {
+                              required: 'Employer name is required'
+                            })}
+                            placeholder="Company Name"
+                          />
+                          {errors.previousEmployments?.[index]?.employer && (
+                            <p className="text-xs text-red-500">
+                              {errors.previousEmployments[index]?.employer?.message}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Job Title */}
+                        <div className="space-y-1">
+                          <Label htmlFor={`previousEmployments.${index}.jobTitle`} className="text-xs">
+                            Job Position *
+                          </Label>
+                          <Input
+                            id={`previousEmployments.${index}.jobTitle`}
+                            className="h-8 text-xs"
+                            {...register(`previousEmployments.${index}.jobTitle`, {
+                              required: 'Job title is required'
+                            })}
+                            placeholder="Position"
+                          />
+                          {errors.previousEmployments?.[index]?.jobTitle && (
+                            <p className="text-xs text-red-500">
+                              {errors.previousEmployments[index]?.jobTitle?.message}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Start Date */}
+                        <div className="space-y-1">
+                          <Label htmlFor={`previousEmployments.${index}.startDate`} className="text-xs">
+                            Start Date *
+                          </Label>
+                          <Controller
+                            name={`previousEmployments.${index}.startDate`}
+                            control={control}
+                            rules={{ required: 'Start date is required' }}
+                            render={({ field }) => (
+                              <DatePicker
+                                selected={field.value}
+                                onChange={(date) => field.onChange(date)}
+                                dateFormat="dd/MM/yyyy"
+                                className="w-full h-8 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs focus:outline-none focus:ring"
+                                placeholderText="DD/MM/YYYY"
+                                showYearDropdown
+                                showMonthDropdown
+                                scrollableYearDropdown
+                                wrapperClassName="w-full"
+                                yearDropdownItemNumber={50}
+                                maxDate={new Date()}
+                              />
+                            )}
+                          />
+                          {errors.previousEmployments?.[index]?.startDate && (
+                            <p className="text-xs text-red-500">
+                              {errors.previousEmployments[index]?.startDate?.message}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* End Date */}
+                        <div className="space-y-1">
+                          <Label htmlFor={`previousEmployments.${index}.endDate`} className="text-xs">
+                            End Date *
+                          </Label>
+                          <Controller
+                            name={`previousEmployments.${index}.endDate`}
+                            control={control}
+                            rules={{ required: 'End date is required' }}
+                            render={({ field }) => (
+                              <DatePicker
+                                selected={field.value}
+                                onChange={(date) => field.onChange(date)}
+                                dateFormat="dd/MM/yyyy"
+                                className="w-full h-8 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs focus:outline-none focus:ring"
+                                placeholderText="DD/MM/YYYY"
+                                showYearDropdown
+                                showMonthDropdown
+                                scrollableYearDropdown
+                                wrapperClassName="w-full"
+                                yearDropdownItemNumber={50}
+                                maxDate={new Date()}
+                              />
+                            )}
+                          />
+                          {errors.previousEmployments?.[index]?.endDate && (
+                            <p className="text-xs text-red-500">
+                              {errors.previousEmployments[index]?.endDate?.message}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Employment Type */}
+                        <div className="space-y-1">
+                          <Label htmlFor={`previousEmployments.${index}.employmentType`} className="text-xs">
+                            Employment Type *
+                          </Label>
+                          <Controller
+                            name={`previousEmployments.${index}.employmentType`}
+                            control={control}
+                            rules={{ required: 'Employment type is required' }}
+                            render={({ field }) => (
+                              <ReactSelect
+                                {...field}
+                                options={employmentTypeOptions}
+                                value={employmentTypeOptions.find(option => option.value === field.value)}
+                                onChange={(option) => field.onChange(option?.value || '')}
+                                placeholder="Select Type of Employment"
+                                styles={selectStyles}
+                              />
+                            )}
+                          />
+                          {errors.previousEmployments?.[index]?.employmentType && (
+                            <p className="text-xs text-red-500">
+                              {errors.previousEmployments[index]?.employmentType?.message}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      append({
+                        employer: '',
+                        jobTitle: '',
+                        startDate: null,
+                        endDate: null,
+                        employmentType: ''
+                      })
+                    }
+                    className="text-xs"
+                  >
+                    Add More Experience
+                  </Button>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -1003,15 +1098,14 @@ export function PersonalDetailsForm({
                   control={control}
                   rules={{ required: 'Disability status is required' }}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Please select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="no" className="text-xs">No</SelectItem>
-                        <SelectItem value="yes" className="text-xs">Yes</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <ReactSelect
+                      {...field}
+                      options={yesNoOptions}
+                      value={yesNoOptions.find(option => option.value === field.value)}
+                      onChange={(option) => field.onChange(option?.value || '')}
+                      placeholder="Please select"
+                      styles={selectStyles}
+                    />
                   )}
                 />
                 {errors.disability && (
@@ -1019,15 +1113,10 @@ export function PersonalDetailsForm({
                 )}
               </div>
 
-              {watch('disability') === 'yes' && (
+              {watchDisability === 'yes' && (
                 <div className="space-y-1 md:col-span-2">
                   <Label htmlFor="disabilityDetails" className="text-xs">Please provide details</Label>
-                  <Textarea
-                    id="disabilityDetails"
-                    className="text-xs"
-                    {...register('disabilityDetails')}
-                    rows={3}
-                  />
+                  <Textarea id="disabilityDetails" className="text-xs" {...register('disabilityDetails')} rows={3} />
                 </div>
               )}
             </div>
@@ -1047,15 +1136,15 @@ export function PersonalDetailsForm({
                   name="completedUKCourse"
                   control={control}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Please select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="yes" className="text-xs">Yes</SelectItem>
-                        <SelectItem value="no" className="text-xs">No</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <ReactSelect
+                      {...field}
+                      options={yesNoOptions}
+                      value={yesNoOptions.find(option => option.value === field.value)}
+                      onChange={(option) => field.onChange(option?.value || '')}
+                      placeholder="Please select"
+                      isClearable
+                      styles={selectStyles}
+                    />
                   )}
                 />
               </div>
@@ -1065,15 +1154,15 @@ export function PersonalDetailsForm({
                   name="visaRequired"
                   control={control}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Please select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="yes" className="text-xs">Yes</SelectItem>
-                        <SelectItem value="no" className="text-xs">No</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <ReactSelect
+                      {...field}
+                      options={yesNoOptions}
+                      value={yesNoOptions.find(option => option.value === field.value)}
+                      onChange={(option) => field.onChange(option?.value || '')}
+                      placeholder="Please select"
+                      isClearable
+                      styles={selectStyles}
+                    />
                   )}
                 />
               </div>
@@ -1083,27 +1172,22 @@ export function PersonalDetailsForm({
                   name="visaRefusal"
                   control={control}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Please select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="yes" className="text-xs">Yes</SelectItem>
-                        <SelectItem value="no" className="text-xs">No</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <ReactSelect
+                      {...field}
+                      options={yesNoOptions}
+                      value={yesNoOptions.find(option => option.value === field.value)}
+                      onChange={(option) => field.onChange(option?.value || '')}
+                      placeholder="Please select"
+                      isClearable
+                      styles={selectStyles}
+                    />
                   )}
                 />
               </div>
-              {watch('visaRefusal') === 'yes' && (
+              {watchVisaRefusal === 'yes' && (
                 <div className="space-y-1 md:col-span-2">
                   <Label htmlFor="visaRefusalDetail" className="text-xs">Please provide details</Label>
-                  <Textarea
-                    id="visaRefusalDetail"
-                    className="text-xs"
-                    {...register('visaRefusalDetail')}
-                    rows={3}
-                  />
+                  <Textarea id="visaRefusalDetail" className="text-xs" {...register('visaRefusalDetail')} rows={3} />
                 </div>
               )}
               <div className="space-y-1">
@@ -1112,15 +1196,15 @@ export function PersonalDetailsForm({
                   name="enteredUKBefore"
                   control={control}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Please select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="yes" className="text-xs">Yes</SelectItem>
-                        <SelectItem value="no" className="text-xs">No</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <ReactSelect
+                      {...field}
+                      options={yesNoOptions}
+                      value={yesNoOptions.find(option => option.value === field.value)}
+                      onChange={(option) => field.onChange(option?.value || '')}
+                      placeholder="Please select"
+                      isClearable
+                      styles={selectStyles}
+                    />
                   )}
                 />
               </div>
@@ -1130,15 +1214,21 @@ export function PersonalDetailsForm({
                   name="studentType"
                   control={control}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Please select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="domestic" className="text-xs">Domestic</SelectItem>
-                        <SelectItem value="international" className="text-xs">International</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <ReactSelect
+                      {...field}
+                      options={[
+                        { value: 'international', label: 'International' },
+                        { value: 'eu', label: 'Home' }
+                      ]}
+                      value={[
+                        { value: 'international', label: 'International' },
+                        { value: 'eu', label: 'Home' }
+                      ].find(option => option.value === field.value)}
+                      onChange={(option) => field.onChange(option?.value || '')}
+                      placeholder="Please select"
+                      isClearable
+                      styles={selectStyles}
+                    />
                   )}
                 />
               </div>
@@ -1149,13 +1239,13 @@ export function PersonalDetailsForm({
                   control={control}
                   render={({ field }) => (
                     <ReactSelect
+                      {...field}
                       options={countryOptions}
-                      value={countryOptions.find(
-                        (option) => option.value === field.value
-                      )}
+                      value={countryOptions.find(option => option.value === field.value)}
                       onChange={(option) => field.onChange(option?.value || '')}
                       placeholder="Please select"
                       isSearchable
+                      isClearable
                       styles={selectStyles}
                     />
                   )}
@@ -1167,28 +1257,21 @@ export function PersonalDetailsForm({
                   name="fundingType"
                   control={control}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Please select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mockData.fundingTypes.map((type, index) => (
-                          <SelectItem key={index} value={type} className="text-xs">
-                            {type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <ReactSelect
+                      {...field}
+                      options={fundingOptions}
+                      value={fundingOptions.find(option => option.value === field.value)}
+                      onChange={(option) => field.onChange(option?.value || '')}
+                      placeholder="Please select"
+                      isClearable
+                      styles={selectStyles}
+                    />
                   )}
                 />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="hearAboutUs" className="text-xs">How did you hear about us?</Label>
-                <Input
-                  id="hearAboutUs"
-                  className="h-8 text-xs"
-                  {...register('hearAboutUs')}
-                />
+                <Input id="hearAboutUs" className="h-8 text-xs" {...register('hearAboutUs')} />
               </div>
             </div>
           </CardContent>
@@ -1196,7 +1279,7 @@ export function PersonalDetailsForm({
 
         {/* Submit Button */}
         <div className="flex justify-end">
-          <Button type="submit" className=" text-xs">
+          <Button type="submit" className="text-xs">
             Save Changes
           </Button>
         </div>

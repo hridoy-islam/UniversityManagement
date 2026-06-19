@@ -108,7 +108,7 @@ export const loginUser = createAsyncThunk<UserResponse, UserCredentials>(
 
     const response = await request.data;
 
-    localStorage.setItem('investment', JSON.stringify(response.data.accessToken));
+    localStorage.setItem('unimanagement', JSON.stringify(response.data.accessToken));
     return response;
   }
 );
@@ -130,7 +130,7 @@ export const authWithFbORGoogle = createAsyncThunk<
     }
   );
   const response = await request.data;
-  localStorage.setItem('investment', JSON.stringify(response.data.accessToken));
+  localStorage.setItem('unimanagement', JSON.stringify(response.data.accessToken));
   return response;
 });
 // forgot password
@@ -222,9 +222,7 @@ export const resendOtp = createAsyncThunk(
   }
 );
 
-export const logout = createAsyncThunk<void>('user/logout', async () => {
-  localStorage.removeItem('investment');
-});
+
 
 const authSlice = createSlice({
   name: 'auth',
@@ -238,6 +236,22 @@ const authSlice = createSlice({
     },
     updateAuthIsValided: (state, action) => {
       state.user.isValided = action.payload;
+    },
+    logout(state) {
+      state.loading = false;
+      state.user = null;
+      state.token = null;
+      state.error = null;
+      localStorage.removeItem('unimanagement');
+    },
+    setToken(state, action) {
+      state.token = action.payload;
+      // Also keep the decoded user in sync with the new token
+      try {
+        state.user = { ...jwtDecode(action.payload) };
+      } catch {
+        // If decoding fails, leave user as-is
+      }
     }
   },
   extraReducers: (builder) => {
@@ -304,12 +318,7 @@ const authSlice = createSlice({
         state.error = 'Please Check Your Login Credentials';
         state.token = null;
       })
-      .addCase(logout.fulfilled, (state) => {
-        state.loading = false;
-        state.user = null; // Clear user state on logout
-        state.error = null;
-        state.token = null;
-      }).addCase(changePassword.pending, (state) => {
+     .addCase(changePassword.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
@@ -344,5 +353,5 @@ const authSlice = createSlice({
   }
 });
 
-export const { resetError ,updateAuthIsCompleted, updateAuthIsValided} = authSlice.actions;
+export const { resetError ,updateAuthIsCompleted, updateAuthIsValided,logout, setToken} = authSlice.actions;
 export default authSlice.reducer;

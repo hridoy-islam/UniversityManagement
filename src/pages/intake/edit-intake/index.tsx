@@ -1,553 +1,287 @@
-import React from 'react';
-
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import React from "react"
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { ArrowLeft, Loader2 } from "lucide-react"
+import { useParams, useNavigate } from "react-router-dom"
+import axiosInstance from "@/lib/axios"
+import { useToast } from "@/components/ui/use-toast"
+import moment from "@/lib/moment-setup"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import DatePicker from "react-datepicker"
+import "react-datepicker/dist/react-datepicker.css"
+import { CalendarIcon } from "lucide-react"
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
-import { ArrowLeft, Calendar, X } from 'lucide-react';
-import { useParams, useNavigate } from 'react-router-dom';
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
 
-// Import react-select
-import SelectReact, {
-  MultiValue,
-  SingleValue,
-  StylesConfig,
-  components
-} from 'react-select';
+// Zod validation schema - matches the Term model exactly
+const intakeFormSchema = z.object({
+  termName: z.string()
+    .min(1, "Intake name is required")
+    .min(3, "Intake name must be at least 3 characters")
+    .max(100, "Intake name must not exceed 100 characters")
+    .trim(),
+  validTillDate: z.date({
+    invalid_type_error: "Please select a valid date",
+  }).optional().nullable(),
+})
 
-// Mock data
-const campusData = {
-  'watney-college': {
-    name: 'Watney College, Nelson Street',
-    courses: [
-      'Entry Level Certificate in ESOL International All Modes (Entry 3)',
-      'Focus Awards Level 3 Diploma in Business Administration',
-      'ESB Level 2 Certificate in ESOL Skills for Life',
-      'Level 2 Adult Social Care Certificate',
-      'Level 4 Diploma in Adult Care'
-    ]
-  },
-  'downtown-campus': {
-    name: 'Downtown Campus',
-    courses: [
-      'ESB Level 2 Certificate in ESOL Skills for Life',
-      'Level 2 Adult Social Care Certificate',
-      'Level 4 Diploma in Adult Care',
-      'Certificate in Digital Marketing',
-      'Diploma in Project Management'
-    ]
-  },
-  'north-campus': {
-    name: 'North Campus',
-    courses: [
-      'Entry Level Certificate in ESOL International All Modes (Entry 3)',
-      'Focus Awards Level 3 Diploma in Business Administration',
-      'Certificate in Healthcare Support',
-      'Diploma in Early Childhood Education'
-    ]
-  }
-};
+type IntakeFormValues = z.infer<typeof intakeFormSchema>
 
-const courseMetadata: Record<string, { fee: number; durationWeeks: number }> = {
-  'Entry Level Certificate in ESOL International All Modes (Entry 3)': {
-    fee: 450,
-    durationWeeks: 12
-  },
-  'Focus Awards Level 3 Diploma in Business Administration': {
-    fee: 1200,
-    durationWeeks: 24
-  },
-  'ESB Level 2 Certificate in ESOL Skills for Life': {
-    fee: 600,
-    durationWeeks: 16
-  },
-  'Level 2 Adult Social Care Certificate': {
-    fee: 800,
-    durationWeeks: 20
-  },
-  'Level 4 Diploma in Adult Care': {
-    fee: 1500,
-    durationWeeks: 36
-  },
-  'Certificate in Digital Marketing': {
-    fee: 1000,
-    durationWeeks: 18
-  },
-  'Diploma in Project Management': {
-    fee: 1800,
-    durationWeeks: 30
-  },
-  'Certificate in Healthcare Support': {
-    fee: 900,
-    durationWeeks: 22
-  },
-  'Diploma in Early Childhood Education': {
-    fee: 1600,
-    durationWeeks: 40
-  }
-};
-
-const mockIntakes = [
-  {
-    id: '1',
-    intakeName: 'January 2025 Intake',
-    validTill: '2025-01-30',
-    campus: 'watney-college',
-    selectedCourses: [
-      'Focus Awards Level 3 Diploma in Business Administration',
-      'Level 4 Diploma in Adult Care'
-    ]
-  },
-  {
-    id: '2',
-    intakeName: 'Spring 2025',
-    validTill: '2025-04-15',
-    campus: 'downtown-campus',
-    selectedCourses: ['Diploma in Project Management']
-  }
-];
-
-type CourseOption = {
-  value: string;
-  label: string;
-};
+interface TermType {
+  _id: string
+  termName: string
+  validTillDate?: string
+  status: number
+}
 
 export default function EditIntakePage() {
-  const { id } = useParams();
-  const navigate = useNavigate();
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
+  const [fetchingIntake, setFetchingIntake] = useState(true)
 
-  const [formData, setFormData] = useState({
-    intakeName: '',
-    validTill: '',
-    campus: '',
-    selectedCourses: [] as string[],
-    courseDetails: {} as Record<
-      string,
-      { fee: number; startDate: string; endDate: string }
-    >
-  });
+  const form = useForm<IntakeFormValues>({
+    resolver: zodResolver(intakeFormSchema),
+    defaultValues: {
+      termName: "",
+      validTillDate: undefined,
+    },
+  })
 
-  // Extend Date prototype
+  // Fetch intake data
   useEffect(() => {
-    const intake = mockIntakes.find((i) => i.id === id);
-    if (intake) {
-      const courseDetails: Record<
-        string,
-        { fee: number; startDate: string; endDate: string }
-      > = {};
-
-      intake.selectedCourses.forEach((course) => {
-        const meta = courseMetadata[course] || { fee: 0, durationWeeks: 12 };
-        const startDate = new Date(intake.validTill);
-        startDate.setDate(startDate.getDate() + 7);
-        const endDate = new Date(startDate);
-        endDate.setWeeks?.(endDate.getWeeks?.() + meta.durationWeeks);
-
-        courseDetails[course] = {
-          fee: meta.fee,
-          startDate: startDate.toISOString().split('T')[0],
-          endDate: endDate.toISOString().split('T')[0]
-        };
-      });
-
-      setFormData({
-        intakeName: intake.intakeName,
-        validTill: intake.validTill,
-        campus: intake.campus,
-        selectedCourses: intake.selectedCourses,
-        courseDetails
-      });
-    }
-  }, [id]);
-
-  // Polyfill for weeks
-  if (!Date.prototype.setWeeks) {
-    Date.prototype.setWeeks = function (weeks: number) {
-      this.setDate(this.getDate() + weeks * 7);
-    };
-  }
-  if (!Date.prototype.getWeeks) {
-    Date.prototype.getWeeks = function () {
-      const oneWeek = 7 * 24 * 60 * 60 * 1000;
-      return Math.round((this.getTime() - new Date().getTime()) / oneWeek);
-    };
-  }
-
-  const handleCampusChange = (campus: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      campus,
-      selectedCourses: [],
-      courseDetails: {}
-    }));
-  };
-
-  const handleCourseChange = (
-    selectedOptions: MultiValue<CourseOption> | SingleValue<CourseOption>
-  ) => {
-    const selected = (selectedOptions as MultiValue<CourseOption>) || [];
-    const courseNames = selected.map((opt) => opt.value);
-
-    setFormData((prev) => {
-      const updatedDetails = { ...prev.courseDetails };
-
-      // Add new courses
-      courseNames.forEach((course) => {
-        if (!updatedDetails[course]) {
-          const meta = courseMetadata[course] || { fee: 0, durationWeeks: 12 };
-          const startDate = new Date(prev.validTill || Date.now());
-          startDate.setDate(startDate.getDate() + 7);
-          const endDate = new Date(startDate);
-          endDate.setWeeks?.(endDate.getWeeks?.() + meta.durationWeeks);
-
-          updatedDetails[course] = {
-            fee: meta.fee,
-            startDate: startDate.toISOString().split('T')[0],
-            endDate: endDate.toISOString().split('T')[0]
-          };
-        }
-      });
-
-      // Remove unselected courses
-      Object.keys(updatedDetails).forEach((course) => {
-        if (!courseNames.includes(course)) {
-          delete updatedDetails[course];
-        }
-      });
-
-      return {
-        ...prev,
-        selectedCourses: courseNames,
-        courseDetails: updatedDetails
-      };
-    });
-  };
-
-  const handleDetailChange = (
-    course: string,
-    field: 'fee' | 'startDate' | 'endDate',
-    value: string | number
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      courseDetails: {
-        ...prev.courseDetails,
-        [course]: {
-          ...prev.courseDetails[course],
-          [field]: value
-        }
+    const fetchIntake = async () => {
+      try {
+        const res = await axiosInstance.get(`/terms/${id}`)
+        const intake: TermType = res.data.data
+        
+        // Set form values
+        form.reset({
+          termName: intake.termName,
+          validTillDate: intake.validTillDate ? moment(intake.validTillDate).toDate() : undefined,
+        })
+      } catch (error) {
+        console.error("Failed to fetch intake:", error)
+        toast({
+          title: "Error",
+          description: "Failed to fetch intake details. Please try again.",
+          variant: "destructive",
+        })
+        navigate(-1)
+      } finally {
+        setFetchingIntake(false)
       }
-    }));
-  };
-
-  const removeCourse = (courseToRemove: string) => {
-    if (
-      window.confirm(
-        `Are you sure you want to remove "${courseToRemove}" from this intake?`
-      )
-    ) {
-      setFormData((prev) => {
-        const updatedDetails = { ...prev.courseDetails };
-        const updatedCourses = prev.selectedCourses.filter(
-          (c) => c !== courseToRemove
-        );
-        delete updatedDetails[courseToRemove];
-
-        return {
-          ...prev,
-          selectedCourses: updatedCourses,
-          courseDetails: updatedDetails
-        };
-      });
     }
-  };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Updated intake:', formData);
-    navigate(-1);
-  };
+    if (id) {
+      fetchIntake()
+    }
+  }, [id, form, navigate, toast])
 
-  const selectedCampusData = formData.campus
-    ? campusData[formData.campus as keyof typeof campusData]
-    : null;
+  const onSubmit = async (data: IntakeFormValues) => {
+    setLoading(true)
+    
+    try {
+      const payload: {
+        termName: string;
+        validTillDate?: string | null;
+      } = {
+        termName: data.termName,
+      }
 
-  const courseOptions: CourseOption[] = selectedCampusData
-    ? selectedCampusData.courses.map((course) => ({
-        value: course,
-        label: course
-      }))
-    : [];
+      // Handle date - if null/undefined, set to null to clear it
+      if (data.validTillDate) {
+        payload.validTillDate = new Date(
+          Date.UTC(
+            data.validTillDate.getFullYear(),
+            data.validTillDate.getMonth(),
+            data.validTillDate.getDate()
+          )
+        ).toISOString()
+      } else {
+        payload.validTillDate = null // Send null to clear the date
+      }
 
-  const selectedCourseOptions: CourseOption[] = formData.selectedCourses
-    .map((course) => ({
-      value: course,
-      label: course
-    }))
-    .filter((opt) => courseOptions.some((o) => o.value === opt.value));
+      await axiosInstance.patch(`/terms/${id}`, payload)
+      
+      toast({
+        title: "Success",
+        description: "Intake has been updated successfully.",
+      })
+      navigate(-1)
+    } catch (error) {
+      console.error("Failed to update intake:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update intake. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  // Custom styles to hide indicators and value container
-  const customStyles: StylesConfig<CourseOption, true> = {
-    control: (base) => ({
-      ...base,
-      minHeight: '32px',
-      fontSize: '12px',
-      cursor: 'pointer'
-    }),
-    valueContainer: (base) => ({
-      ...base,
-      minHeight: '32px',
-      padding: '0 6px'
-    }),
-    placeholder: (base) => ({
-      ...base,
-      fontSize: '12px'
-    }),
-    multiValue: () => ({
-      display: 'none' // hides tags but keeps selections
-    }),
-    indicatorsContainer: () => ({
-      display: 'none' // hides dropdown arrow & clear button
-    })
-  };
+  // Custom input component for react-datepicker
+  const CustomDatePickerInput = React.forwardRef<
+    HTMLButtonElement,
+    { value?: string; onClick?: () => void; onClear?: () => void }
+  >(({ value, onClick, onClear }, ref) => (
+    <div className="relative w-full">
+      <button
+        type="button"
+        onClick={onClick}
+        ref={ref}
+        className="flex h-8 w-full items-center rounded-md border border-gray-300 px-3 py-2 text-xs ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={loading}
+      >
+        <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+        {value || <span className="text-gray-400">Pick a date</span>}
+      </button>
+      {value && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            onClear?.()
+          }}
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          disabled={loading}
+        >
+          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      )}
+    </div>
+  ))
+  CustomDatePickerInput.displayName = "CustomDatePickerInput"
 
-  const CustomValueContainer = (props: any) => {
-    const { children, ...rest } = props;
+  // Show loading state while fetching intake
+  if (fetchingIntake) {
     return (
-      <components.ValueContainer {...rest}>
-        {/* Always show placeholder */}
-        <components.Placeholder {...props}>
-          Select courses...
-        </components.Placeholder>
-        {/* Render children except the default placeholder */}
-        {children.filter(
-          (child: any) => child?.type !== components.Placeholder
-        )}
-      </components.ValueContainer>
-    );
-  };
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2 text-sm">Loading intake details...</span>
+      </div>
+    )
+  }
 
   return (
-    <div>
+    <div className="">
       <Card>
         <CardHeader>
           <div className="flex items-center gap-4">
-            <div onClick={() => navigate(-1)} className="cursor-pointer">
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-theme text-xs text-white hover:bg-theme/90"
-              >
+            <div onClick={() => navigate(-1)}>
+              <Button variant="outline" size="sm" className="text-xs bg-theme text-white hover:bg-theme/90">
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </div>
             <div>
               <CardTitle className="text-2xl font-bold">Edit Intake</CardTitle>
-              <CardDescription className="mt-1 text-xs">
-                Update the intake details, campus, and course selections
+              <CardDescription className="text-xs mt-1">
+                Update the intake term details
               </CardDescription>
             </div>
           </div>
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6 text-xs">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-              <div className="space-y-1">
-                <Label htmlFor="intakeName" className="text-xs font-medium">
-                  Intake Name
-                </Label>
-                <Input
-                  id="intakeName"
-                  value={formData.intakeName}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      intakeName: e.target.value
-                    }))
-                  }
-                  required
-                  className="h-8 text-xs"
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 text-xs">
+              {/* --- Grid Section --- */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Intake Name */}
+                <FormField
+                  control={form.control}
+                  name="termName"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs font-medium">
+                        Intake Name <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter intake name (e.g., Spring 2024)"
+                          {...field}
+                          className="text-xs h-8"
+                          disabled={loading}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Available Till - React DatePicker (Optional) */}
+                <FormField
+                  control={form.control}
+                  name="validTillDate"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs font-medium">
+                        Valid till date 
+                      </FormLabel>
+                      <FormControl>
+                        <DatePicker
+                          selected={field.value}
+                          onChange={(date) => field.onChange(date)}
+                          dateFormat="dd/MM/yyyy"
+                          placeholderText="Pick a date"
+                          isClearable
+                          showMonthDropdown
+                          showYearDropdown
+                          dropdownMode="select"
+                          customInput={
+                            <CustomDatePickerInput 
+                              onClear={() => field.onChange(null)}
+                            />
+                          }
+                          wrapperClassName="w-full"
+                          className="w-full"
+                          disabled={loading}
+                        />
+                      </FormControl>
+                     
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
                 />
               </div>
 
-              <div className="space-y-1">
-                <Label htmlFor="validTill" className="text-xs font-medium">
-                  Available till date
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="validTill"
-                    type="date"
-                    value={formData.validTill}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        validTill: e.target.value
-                      }))
-                    }
-                    required
-                    className="h-8 pl-3 pr-8 text-xs"
-                  />
-                  <Calendar className="pointer-events-none absolute right-3 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-xs font-medium">Campus</Label>
-                <Select
-                  value={formData.campus}
-                  onValueChange={handleCampusChange}
-                  required
+              
+              {/* --- Submit Button --- */}
+              <div className="flex justify-end pt-4">
+                <Button 
+                  type="submit" 
+                  className="text-xs h-8 px-6 bg-theme text-white hover:bg-theme/90"
+                  disabled={loading}
                 >
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Select campus" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(campusData).map(([key, campus]) => (
-                      <SelectItem key={key} value={key} className="text-xs">
-                        {campus.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </Button>
               </div>
-            </div>
-
-            {/* Course Multi-Select - Hidden Selected Tags & Icons */}
-            {selectedCampusData && (
-              <div className="space-y-2">
-                <Label className="text-xs font-medium">Select Courses</Label>
-                <SelectReact
-                  isMulti
-                  options={courseOptions}
-                  value={selectedCourseOptions}
-                  onChange={handleCourseChange}
-                  placeholder="Select courses..."
-                  className="text-xs"
-                  styles={customStyles}
-                  closeMenuOnSelect={false}
-                  blurInputOnSelect={true}
-                  components={{
-                    ValueContainer: CustomValueContainer
-                  }}
-                />
-              </div>
-            )}
-
-            {/* Selected Courses Table with Remove Button */}
-            {formData.selectedCourses.length > 0 && (
-              <div className="mt-6">
-                <h4 className="mb-3 text-xs font-medium">Course Details</h4>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full border border-gray-200 text-xs">
-                    <thead>
-                      <tr className="bg-gray-50">
-                        <th className="px-3 py-2 text-left">Course Name</th>
-                        <th className="px-3 py-2 text-left">Course Fee (£)</th>
-                        <th className="px-3 py-2 text-left">Start Date</th>
-                        <th className="px-3 py-2 text-left">End Date</th>
-                        <th className="px-3 py-2 text-left">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {formData.selectedCourses.map((course) => {
-                        const details = formData.courseDetails[course] || {
-                          fee: 0,
-                          startDate: '',
-                          endDate: ''
-                        };
-                        return (
-                          <tr key={course} className="border-t">
-                            <td className="px-3 py-2 font-medium">{course}</td>
-                            <td className="px-3 py-2">
-                              <Input
-                                type="number"
-                                value={details.fee}
-                                onChange={(e) =>
-                                  handleDetailChange(
-                                    course,
-                                    'fee',
-                                    Number(e.target.value)
-                                  )
-                                }
-                                className="h-8 w-24"
-                              />
-                            </td>
-                            <td className="px-3 py-2">
-                              <Input
-                                type="date"
-                                value={details.startDate}
-                                onChange={(e) =>
-                                  handleDetailChange(
-                                    course,
-                                    'startDate',
-                                    e.target.value
-                                  )
-                                }
-                                className="h-8"
-                              />
-                            </td>
-                            <td className="px-3 py-2">
-                              <Input
-                                type="date"
-                                value={details.endDate}
-                                onChange={(e) =>
-                                  handleDetailChange(
-                                    course,
-                                    'endDate',
-                                    e.target.value
-                                  )
-                                }
-                                className="h-8"
-                              />
-                            </td>
-                            <td className="px-3 py-2 flex justify-end">
-                              <Button
-                                type="button"
-                                variant="default"
-                                size="icon"
-                                className="h-8 w-8 text-white bg-red-500 hover:bg-red-500/90 "
-                                onClick={() => removeCourse(course)}
-                              >
-                                <X className="h-3.5 w-3.5" />
-                              </Button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {/* Save Button */}
-            <div className="flex justify-end pt-4">
-              <Button
-                type="submit"
-                className="bg-theme text-xs text-white hover:bg-theme/90"
-              >
-                Save Changes
-              </Button>
-            </div>
-          </form>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

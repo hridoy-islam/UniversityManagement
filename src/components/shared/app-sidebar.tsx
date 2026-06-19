@@ -48,6 +48,7 @@ import {
 import {
   BookOpen,
   Building,
+  Building2,
   CalendarFold,
   ClipboardPlus,
   ContactRound,
@@ -78,6 +79,11 @@ const data = {
       title: 'Intake',
       url: 'intake',
       icon: CalendarFold
+    },
+    {
+      title: 'Awarding Body',
+      url: 'awarding-body',
+      icon: Building2
     },
     {
       title: 'Course',
@@ -111,7 +117,7 @@ const data = {
       icon: IconUserPlus,
       items: [
         { title: 'Applications', url: 'applicantions' },
-        { title: 'New Registrations', url: '#' },
+        { title: 'Offer Accepted', url: 'offer-accepted' },
         { title: 'Student List', url: '#' },
         {
           title: 'Transfers',

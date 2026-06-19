@@ -270,7 +270,7 @@ export function EmailDraftDialog({
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-theme text-white hover:bg-theme/90"
+                  className="bg-watney text-white hover:bg-watney/90"
                 >
                   {initialData ? 'Update Template' : 'Save Template'}
                 </Button>
